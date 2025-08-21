@@ -9,4 +9,5 @@ dependencies = []
 sqlmate = "cli.__main__:main"
 
 [tool.setuptools]
-packages = ["cli"]
+packages = ["cli", "backend", "backend.src", "backend.src.utils", "backend.src.classes", 
+           "backend.src.classes.database", "backend.src.classes.queries", "backend.src.routers"]

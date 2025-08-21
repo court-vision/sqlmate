@@ -1,4 +1,5 @@
-from src.utils.constants import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+from backend.src.utils.error import Error
+from backend.src.utils.constants import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
 from contextlib import contextmanager
 from typing import Generator, Any
 from datetime import datetime
@@ -9,12 +10,18 @@ from datetime import timedelta
 from abc import ABC, abstractmethod
 
 class DBInterface(ABC):
+    def __init__(self, credentials: dict):
+        self.host = credentials.get("DB_HOST", "localhost")
+        self.user = credentials.get("DB_USER", "root")
+        self.password = credentials.get("DB_PASSWORD", "")
+        self.database = credentials.get("DB_NAME", "")
+
     @abstractmethod
-    def connect(self) -> Any:
+    def _connect(self) -> Any:
         pass
 
     @abstractmethod
-    def get_cursor(self) -> Any:
+    def _get_cursor(self) -> Any:
         pass
 
     @abstractmethod
@@ -22,24 +29,15 @@ class DBInterface(ABC):
         pass
 
     @abstractmethod
-    def create_db(self, db_name: str) -> bool:
-        pass
-
-    @abstractmethod
     def fetch_metadata(self, db_name: str) -> dict:
-        pass
-
-    @abstractmethod
-    def create_tables(self) -> bool:
-        pass
-
-    @abstractmethod
-    def create_triggers_and_procedures(self, db_name: str) -> bool:
         pass
 
     @abstractmethod
     def close(self) -> None:
         pass
+
+    def _raise_err(self, message: str) -> None:
+        raise Error(message)
 
 
 user_db_config = {

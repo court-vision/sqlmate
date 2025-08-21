@@ -4,5 +4,6 @@ frontend/.next
 frontend/src/Example UI.jpeg
 backend/secrets.env
 .venv/
+**/__init__.py
 # frontend/next.config.js
 # frontend/next.config.2.ts

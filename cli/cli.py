@@ -2,8 +2,10 @@ import argparse
 import os
 import subprocess
 
+from backend.src.classes.database.mysql import MySQLDB
+
 from .setup.env_setup import generate_defaults, prompt_for_credentials, create_env_file, load_config, DOCKER_COMPOSE_FILE
-from .setup.db_setup import initialize_database, connect_with_retry
+from .setup.db_setup import initialize_database
 
 def init():
     print("🔧 Initializing SQLMate project...")
@@ -33,22 +35,26 @@ def cleanup():
     print("🧹 Cleaning up SQLMate project...")
     
     credentials = load_config()
-    connection = connect_with_retry(credentials, from_init=False)
-    if not connection:
+    db = MySQLDB(credentials)
+    if not db.connection:
         print("❌ Failed to connect to the database for cleanup.")
         return
     
     # Remove the procedure in the user's source database and then the sqlmate database
+    queries = [
+        f"DROP PROCEDURE IF EXISTS {credentials['DB_NAME']}.save_user_table",
+        "DROP DATABASE IF EXISTS sqlmate"
+    ]
+
     try:
-        with connection.cursor() as cursor:
-            cursor.execute(f"DROP PROCEDURE IF EXISTS {credentials["DB_NAME"]}.save_user_table")
-            cursor.execute("DROP DATABASE IF EXISTS sqlmate")
-        print("✅ Cleanup completed")
+        success = db.execute_many(queries, err_msg="Error during cleanup")
+        if success:
+            print("✅ Cleanup completed")
+        else:
+            print("❌ Cleanup failed")
     except Exception as e:
         print(f"❌ Error during cleanup: {e}")
-    finally:
-        connection.commit()
-        connection.close()
+
 
 def run():
     print("🚀 Starting SQLMate with Docker...")

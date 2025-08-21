@@ -4,6 +4,7 @@ Database setup utilities for SQLMate CLI.
 This module contains functions for initializing database tables
 and other database setup tasks required for SQLMate to function properly.
 """
+from backend.src.classes.database.base import DBInterface
 from .sql.database import (
     CREATE_SQLMATE_DATABASE
 )
@@ -19,70 +20,15 @@ from .sql.procedures import (
     CREATE_SAVE_USER_TABLE_PROC,
     CREATE_PROCESS_TABLE_TO_DROP_PROC
 )
-from typing import Optional, Dict, List, Any, Tuple
+from backend.src.classes.database.mysql import MySQLDB
+from typing import Dict, List, Any, Tuple
 from collections import defaultdict
 import mysql.connector
 from mysql.connector.abstracts import MySQLConnectionAbstract
 from mysql.connector.pooling import PooledMySQLConnection
-import time
 import os
 import json
 
-def connect_with_retry(credentials: Dict[str, str],
-        max_retries: int=5,
-        delay: int=2,
-        from_init: bool = True)  \
-    -> Optional[MySQLConnectionAbstract | PooledMySQLConnection]:
-    """
-    Attempt to connect to the MySQL server with retries.
-    
-    Args:
-        credentials (dict): Database credentials
-        max_retries (int): Maximum number of connection attempts
-        delay (int): Seconds to wait between retries
-        from_init (bool): Flag to indicate if called from initialization
-        
-    Returns:
-        connection: MySQL connection object or None if connection failed
-    """
-    for attempt in range(max_retries):
-        try:
-            print(f"Attempting to connect to database (attempt {attempt + 1}/{max_retries})...")
-            connection = mysql.connector.connect(
-                host=credentials["DB_HOST"],
-                user=credentials["DB_USER"],
-                password=credentials["DB_PASSWORD"]
-            )
-            print("✅ Database server connection successful!")
-
-            # Check if the database exists
-            cursor = connection.cursor()
-            cursor.execute(f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{credentials['DB_NAME']}'")
-            if not cursor.fetchone():
-                print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
-                connection.close()
-                return None
-            if from_init:
-                print(f"✅ Database '{credentials['DB_NAME']}' found.")
-
-            # Create the 'sqlmate' database if it doesn't exist
-            cursor = connection.cursor()
-            cursor.execute(CREATE_SQLMATE_DATABASE)
-            cursor.close()
-            connection.commit()
-
-            return connection
-        
-        except mysql.connector.Error as err:
-            print(f"❌ Connection failed: {err}")
-            if attempt < max_retries - 1:
-                print(f"Retrying in {delay} seconds...")
-                time.sleep(delay)
-            else:
-                print("❌ Maximum retry attempts reached. Could not connect to server.")
-                return None
-    
-    return None
 
 def fetch_metadata(connection: MySQLConnectionAbstract | PooledMySQLConnection, db_name: str) -> Tuple[bool, Dict[str, Any]]:
     try:
@@ -140,41 +86,6 @@ def create_tables(connection: MySQLConnectionAbstract | PooledMySQLConnection) -
         print(f"❌ Error creating tables: {err}")
         print("Make sure you have the necessary permissions to create databases and tables in your DBMS.")
         return False
-    
-def create_triggers_and_procedures(connection: MySQLConnectionAbstract | PooledMySQLConnection, db_name: str) -> bool:
-    """
-    Create necessary triggers and stored procedures for SQLMate.
-    
-    Args:
-        connection: MySQL connection object
-        
-    Returns:
-        bool: True if successful, False otherwise
-    """
-    try:
-        cursor = connection.cursor()
-        
-        print("🔧 Creating triggers and stored procedures...")
-        queries = [
-            CREATE_BEFORE_DELETE_ON_USER_TABLES_TRIG,
-            CREATE_SAVE_USER_TABLE_PROC.format(
-                db_name=db_name
-            ),
-            CREATE_PROCESS_TABLE_TO_DROP_PROC
-        ]
-
-        for query in queries:
-            cursor.execute(query)
-
-        # Commit the changes to the database
-        connection.commit()
-        cursor.close()
-        print("✅ Triggers and stored procedures created successfully")
-        return True
-        
-    except mysql.connector.Error as err:
-        print(f"❌ Error creating triggers or procedures: {err}")
-        return False
 
 def initialize_database(credentials: dict) -> bool:
     """
@@ -188,16 +99,22 @@ def initialize_database(credentials: dict) -> bool:
         bool: True if successful, False otherwise
     """
     print("\n🔧 Initializing database...")
-    
-    # Connect to database
-    connection = connect_with_retry(credentials)
-    if not connection:
+    db = MySQLDB(credentials)
+    print("✅ Database server connection successful!")
+
+    # Check if the database exists
+    if not db.db_exists():
+        print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
         return False
+    print(f"✅ Database '{credentials['DB_NAME']}' found.")
+
+    # Create the 'sqlmate' database if it doesn't exist
+    db.execute(CREATE_SQLMATE_DATABASE, err_msg="❌ Error creating 'sqlmate' database. Make sure you have the necessary permissions.")
     
     # Generate JSON schema file for frontend use
-    success, metadata = fetch_metadata(connection, credentials["DB_NAME"])
-    if not success:
-        connection.close()
+    metadata = db.fetch_metadata(credentials["DB_NAME"])
+    if not metadata:
+        print(f"❌ Failed to fetch metadata for database '{credentials['DB_NAME']}'.")
         return False
 
     # Prompt user to select tables for schema
@@ -207,39 +124,29 @@ def initialize_database(credentials: dict) -> bool:
     schema = generate_db_schema_json(filtered_metadata)
     
     # Write schema to file
-    try:
-        # Use home directory to store the schema
-        home_dir = os.path.expanduser("~")
-        sqlmate_dir = os.path.join(home_dir, '.sqlmate')
-        schema_path = os.path.join(sqlmate_dir, 'db_schema.json')
-        
-        # Ensure the directory exists
-        os.makedirs(sqlmate_dir, exist_ok=True)
-        
-        # Write the schema to file
-        with open(schema_path, 'w') as f:
-            json.dump(schema, f, indent=2)
-        
-        print(f"✅ Schema file generated at {schema_path}")
-        
-        # Try to copy to frontend directory if it exists
-        copy_schema_to_frontend(schema_path)
-    except Exception as e:
-        print(f"❌ Error writing schema file: {e}")
-        connection.close()
-        return False
+    write_schema_files(schema, db)
 
     # Create tables
-    if not create_tables(connection):
-        connection.close()
-        return False
+    print("🔧 Creating tables...")
+    table_queries = [
+        CREATE_USERS_TABLE,
+        CREATE_USER_TABLES_TABLE,
+        CREATE_TABLES_TO_DROP_TABLE
+    ]
+    db.execute_many(table_queries, err_msg="❌ Error creating tables. Make sure you have the necessary permissions.")
     
     # Create triggers and procedures
-    if not create_triggers_and_procedures(connection, credentials["DB_NAME"]):
-        connection.close()
-        return False
+    trigger_and_procedure_queries = [
+        CREATE_BEFORE_DELETE_ON_USER_TABLES_TRIG,
+        CREATE_SAVE_USER_TABLE_PROC.format(
+            db_name=credentials["DB_NAME"]
+        ),
+        CREATE_PROCESS_TABLE_TO_DROP_PROC
+    ]
 
-    connection.close()
+    db.execute_many(trigger_and_procedure_queries, err_msg="❌ Error creating triggers or procedures. Make sure you have the necessary permissions.")
+
+    db.close()
     
     print("✅ Database initialization completed successfully")
     return True
@@ -339,6 +246,32 @@ def generate_db_schema_json(metadata: Dict[str, List[Dict[str, str]]]) -> List[D
         schema.append(table_schema)
     
     return schema
+
+def write_schema_files(schema: List[Dict[str, Any]], db: DBInterface) -> bool:
+    try:
+        # Use home directory to store the schema
+        home_dir = os.path.expanduser("~")
+        sqlmate_dir = os.path.join(home_dir, '.sqlmate')
+        schema_path = os.path.join(sqlmate_dir, 'db_schema.json')
+        
+        # Ensure the directory exists
+        os.makedirs(sqlmate_dir, exist_ok=True)
+        
+        # Write the schema to file
+        with open(schema_path, 'w') as f:
+            json.dump(schema, f, indent=2)
+        
+        print(f"✅ Schema file generated at {schema_path}")
+        
+        # Try to copy to frontend directory if it exists
+        if not copy_schema_to_frontend(schema_path):
+            raise Exception("Failed to copy schema to frontend")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Error writing schema file: {e}")
+        db.close()
+        return False
 
 def copy_schema_to_frontend(schema_path: str) -> bool:
     """
