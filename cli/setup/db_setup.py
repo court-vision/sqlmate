@@ -107,7 +107,6 @@ def initialize_database(credentials: dict) -> bool:
         print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
         return False
     print(f"✅ Database '{credentials['DB_NAME']}' found.")
-
     # Create the 'sqlmate' database if it doesn't exist
     db.execute(CREATE_SQLMATE_DATABASE, err_msg="❌ Error creating 'sqlmate' database. Make sure you have the necessary permissions.")
     
@@ -144,7 +143,7 @@ def initialize_database(credentials: dict) -> bool:
         CREATE_PROCESS_TABLE_TO_DROP_PROC
     ]
 
-    db.execute_many(trigger_and_procedure_queries, err_msg="❌ Error creating triggers or procedures. Make sure you have the necessary permissions.")
+    db.execute_many(trigger_and_procedure_queries, err_msg="❌ Error creating triggers or procedures. Make sure you have the necessary permissions.", warning_message="⚠️ Warning: Non-fatal error occurred while creating triggers or procedures")
 
     db.close()
     

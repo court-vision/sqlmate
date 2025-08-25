@@ -60,7 +60,7 @@ class MySQLDB(DBInterface):
 			except mysql.Error as err:
 				super()._raise_err(f"{err_msg}: {err}" if err_msg else f"Error executing query: {query}")
 	
-	def execute_many(self, queries: List[str], err_msg: str = "") -> bool:
+	def execute_many(self, queries: List[str], err_msg: str = "", warning_message: str = "") -> bool:
 		with self._get_cursor() as cursor:
 			try:
 				for query in queries:
@@ -72,7 +72,11 @@ class MySQLDB(DBInterface):
 						pass
 				return True
 			except mysql.Error as err:
-				super()._raise_err(f"{err_msg}: {err}" if err_msg else f"Error executing queries: {queries}")
+				if warning_message:
+					print(f"{warning_message}: {err}")
+					return False
+				else:
+					super()._raise_err(f"{err_msg}: {err}" if err_msg else f"Error executing queries: {queries}")
 				return False
 
 	def db_exists(self) -> bool:

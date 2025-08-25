@@ -8,6 +8,7 @@ backend/src/classes/http.py
 backend/src/classes/metadata.py
 backend/src/classes/database/base.py
 backend/src/classes/database/mysql.py
+backend/src/classes/database/postgres.py
 backend/src/classes/queries/base.py
 backend/src/classes/queries/update.py
 backend/src/routers/auth.py
@@ -15,7 +16,6 @@ backend/src/routers/query.py
 backend/src/routers/user_data.py
 backend/src/utils/auth.py
 backend/src/utils/constants.py
-backend/src/utils/db.py
 backend/src/utils/error.py
 backend/src/utils/generators.py
 backend/src/utils/serialization.py
