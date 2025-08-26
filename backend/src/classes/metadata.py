@@ -1,6 +1,6 @@
 from collections import defaultdict, deque
-from utils.constants import DB_NAME
-from utils.db import get_cursor
+from backend.src.utils.constants import DB_NAME
+from backend.src.utils.db import get_cursor
 from typing import List, Any
 from mysql.connector.abstracts import MySQLCursorAbstract
 

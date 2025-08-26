@@ -1,6 +1,6 @@
-from ..metadata import metadata
-from .base import BaseQuery
-from ..http import UpdateQueryParams
+from sqlmate_backend.classes.metadata import metadata
+from sqlmate_backend.classes.queries.base import BaseQuery
+from sqlmate_backend.classes.http import UpdateQueryParams
 from typing import List, Any
 
 # Update query class

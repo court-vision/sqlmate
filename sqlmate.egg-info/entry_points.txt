@@ -1,2 +1,2 @@
 [console_scripts]
-sqlmate = cli.__main__:main
+sqlmate = cli.cli:main

@@ -1,13 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "sqlmate"
 version = "0.1.0"
-description = "A simple CLI for running the SQLMate Docker app"
-authors = [{name = "James Kendrick", email = "jlkendric@yahoo.com"}]
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+  "annotated-types>=0.7.0",
+  "anyio>=4.9.0",
+  "bcrypt>=4.3.0",
+  "cffi>=1.17.1",
+  "click>=8.2.1",
+  "cryptography>=45.0.3",
+  "fastapi>=0.115.0",
+  "h11>=0.16.0",
+  "idna>=3.10",
+  "jwcrypto>=1.5.6",
+  "mysql-connector-python>=9.3.0",
+  "pycparser>=2.22",
+  "SQLAlchemy>=2.0.29",
+  "pydantic>=2.11.5",
+  "pydantic_core>=2.33.2",
+  "PyJWT>=2.10.1",
+  "python-dotenv>=1.1.0",
+  "pytz>=2025.2",
+  "sniffio>=1.3.1",
+  "starlette>=0.46.2",
+  "typing-inspection>=0.4.1",
+  "typing_extensions>=4.13.2",
+  "uvicorn>=0.34.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*", "cli*"]
 
 [project.scripts]
-sqlmate = "cli.__main__:main"
-
-[tool.setuptools]
-packages = ["cli", "backend", "backend.src", "backend.src.utils", "backend.src.classes", 
-           "backend.src.classes.database", "backend.src.classes.queries", "backend.src.routers"]
+sqlmate = "cli.cli:main"

@@ -1,8 +1,8 @@
-from utils.db import get_cursor, get_timestamp
-from utils.serialization import query_output_to_table
-from utils.generators import generate_query
-from classes.http import StatusResponse, Table, QueryParams
-from classes.queries.base import BaseQuery
+from backend.src.utils.serialization import query_output_to_table
+from backend.src.utils.generators import generate_query
+from backend.src.utils.db import get_cursor, get_timestamp
+from backend.src.classes.http import StatusResponse, Table, QueryParams
+from backend.src.classes.queries.base import BaseQuery
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, status, Response

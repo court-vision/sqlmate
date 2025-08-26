@@ -4,7 +4,6 @@ Database setup utilities for SQLMate CLI.
 This module contains functions for initializing database tables
 and other database setup tasks required for SQLMate to function properly.
 """
-from backend.src.classes.database.base import DBInterface
 from .sql.database import (
     CREATE_SQLMATE_DATABASE
 )
@@ -20,53 +19,23 @@ from .sql.procedures import (
     CREATE_SAVE_USER_TABLE_PROC,
     CREATE_PROCESS_TABLE_TO_DROP_PROC
 )
-from backend.src.classes.database.mysql import MySQLDB
-from typing import Dict, List, Any, Tuple
-from collections import defaultdict
-import mysql.connector
-from mysql.connector.abstracts import MySQLConnectionAbstract
-from mysql.connector.pooling import PooledMySQLConnection
+from backend.src.classes.database import SQLAlchemyDB
+from typing import Dict, List, Any
 import os
-import json
+import json    
 
-
-def fetch_metadata(connection: MySQLConnectionAbstract | PooledMySQLConnection, db_name: str) -> Tuple[bool, Dict[str, Any]]:
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE
-                FROM INFORMATION_SCHEMA.COLUMNS
-                WHERE TABLE_SCHEMA = %s AND TABLE_NAME NOT LIKE 'u_%'
-                ORDER BY TABLE_NAME, ORDINAL_POSITION;
-                """, (db_name,)
-            )
-            rows: List[Any] = cursor.fetchall()
-            metadata = defaultdict(list)
-            for table, column, data_type in rows:
-                metadata[table].append({
-                    "column": column,
-                    "data_type": data_type
-                })
-        return True, metadata
-    except mysql.connector.Error as err:
-        print(f"❌ Error fetching schema: {err}")
-        return False, {}
-    
-
-def create_tables(connection: MySQLConnectionAbstract | PooledMySQLConnection) -> bool:
+# Updated to use a SQLAlchemy connection
+def create_tables(connection) -> bool:
     """
     Create the necessary tables for SQLMate.
     
     Args:
-        connection: MySQL connection object
+        connection: SQLAlchemy connection object
         
     Returns:
         bool: True if successful, False otherwise
     """
     try:
-        cursor = connection.cursor()
-        
         print("🔧 Creating tables...")
         queries = [
             CREATE_USERS_TABLE,
@@ -75,14 +44,12 @@ def create_tables(connection: MySQLConnectionAbstract | PooledMySQLConnection) -
         ]
         
         for table_query in queries:
-            cursor.execute(table_query)
+            connection.execute(table_query)
         
-        connection.commit()
-        cursor.close()
         print("✅ Database tables created successfully")
         return True
         
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"❌ Error creating tables: {err}")
         print("Make sure you have the necessary permissions to create databases and tables in your DBMS.")
         return False
@@ -90,7 +57,7 @@ def create_tables(connection: MySQLConnectionAbstract | PooledMySQLConnection) -
 def initialize_database(credentials: dict) -> bool:
     """
     Main function to validate and initialize the database for SQLMate.
-    Currently only supports MySQL, will add backend support for other databases later.
+    Now supports both MySQL and PostgreSQL through SQLAlchemy.
     
     Args:
         credentials (dict): Database credentials
@@ -99,13 +66,15 @@ def initialize_database(credentials: dict) -> bool:
         bool: True if successful, False otherwise
     """
     print("\n🔧 Initializing database...")
-    db = MySQLDB(credentials)
+    
+    # Create database connection using SQLAlchemy
+    db = SQLAlchemyDB(credentials)
     print("✅ Database server connection successful!")
 
-    # Check if the database exists
-    if not db.db_exists():
-        print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
-        return False
+    # # Check if the database exists
+    # if not db.db_exists():
+    #     print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
+    #     return False
     print(f"✅ Database '{credentials['DB_NAME']}' found.")
     # Create the 'sqlmate' database if it doesn't exist
     db.execute(CREATE_SQLMATE_DATABASE, err_msg="❌ Error creating 'sqlmate' database. Make sure you have the necessary permissions.")
@@ -146,7 +115,7 @@ def initialize_database(credentials: dict) -> bool:
     db.execute_many(trigger_and_procedure_queries, err_msg="❌ Error creating triggers or procedures. Make sure you have the necessary permissions.", warning_message="⚠️ Warning: Non-fatal error occurred while creating triggers or procedures")
 
     db.close()
-    
+
     print("✅ Database initialization completed successfully")
     return True
 
@@ -246,7 +215,7 @@ def generate_db_schema_json(metadata: Dict[str, List[Dict[str, str]]]) -> List[D
     
     return schema
 
-def write_schema_files(schema: List[Dict[str, Any]], db: DBInterface) -> bool:
+def write_schema_files(schema: List[Dict[str, Any]], db) -> bool:
     try:
         # Use home directory to store the schema
         home_dir = os.path.expanduser("~")

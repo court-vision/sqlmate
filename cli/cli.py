@@ -2,7 +2,7 @@ import argparse
 import os
 import subprocess
 
-from backend.src.classes.database.mysql import MySQLDB
+from backend.src.classes.database import SQLAlchemyDB
 
 from .setup.env_setup import generate_defaults, prompt_for_credentials, create_env_file, load_config, DOCKER_COMPOSE_FILE
 from .setup.db_setup import initialize_database
@@ -35,8 +35,9 @@ def cleanup():
     print("🧹 Cleaning up SQLMate project...")
     
     credentials = load_config()
-    db = MySQLDB(credentials)
-    if not db.connection:
+    credentials["DB_TYPE"] = "mysql"  # Specify database type for SQLAlchemy
+    db = SQLAlchemyDB(credentials)
+    if not db.engine:
         print("❌ Failed to connect to the database for cleanup.")
         return
     

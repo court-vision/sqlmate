@@ -1,7 +1,8 @@
-from utils.auth import create_access_token, check_user, hash_password, check_password, get_token
-from utils.db import get_cursor
-from classes.http import StatusResponse
+from backend.src.utils.auth import create_access_token, check_user, hash_password, check_password, get_token
+from backend.src.utils.db import user_session_scope, sqlmate_session_scope
+from backend.src.classes.http import StatusResponse
 
+from sqlalchemy import text
 from typing import Any, Optional
 from fastapi import APIRouter, Header, Response, status
 from pydantic import BaseModel
@@ -28,10 +29,10 @@ def register(req: RegisterRequest, response: Response) -> RegisterResponse:
     pw_hash = hash_password(password)
 
     try:
-        with get_cursor("sqlmate") as cur:
-            cur.execute(
-                "INSERT INTO users (username, password, email) VALUES (%s, %s, %s)",
-                (username, pw_hash, email)
+        with sqlmate_session_scope() as session:
+            session.execute(
+                text("INSERT INTO users (username, password, email) VALUES (:username, :password, :email)"),
+                {"username": username, "password": pw_hash, "email": email}
             )
             
     # If insertion fails due to duplicate username, or other error, return error
@@ -79,16 +80,16 @@ def login(req: LoginRequest, response: Response) -> LoginResponse:
     if not username or not password:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return LoginResponse(
-			details=StatusResponse(
-				status="warning",
-				message="Username and password are required",
+            details=StatusResponse(
+                status="warning",
+                message="Username and password are required",
                 code=status.HTTP_400_BAD_REQUEST
-			)
-		)
+            )
+        )
 
-    with get_cursor("sqlmate") as cur:
-        cur.execute("SELECT id, password, email FROM users WHERE username = %s",(username,))
-        row: Any = cur.fetchone()
+    with sqlmate_session_scope() as session:
+        result = session.execute(text("SELECT id, password, email FROM users WHERE username = :username"), {"username": username})
+        row: Any = result.fetchone()
 
     # If user not found or password does not match, return error
     if not row or not check_password(password, row[1]):
@@ -141,12 +142,12 @@ def me(response: Response, authorization: Optional[str] = Header(None)) -> UserI
 		)
 
     # Get the username from the token data
-    with get_cursor("sqlmate") as cur:
-        cur.execute(
-          "SELECT username, email FROM users WHERE id = %s",
-          (user_id,)
+    with sqlmate_session_scope() as session:
+        result = session.execute(
+              text("SELECT username, email FROM users WHERE id = :user_id"),
+              {"user_id": user_id}
         )
-        row: Any = cur.fetchone()
+        row = result.fetchone()
 
     if not row:
         response.status_code = status.HTTP_404_NOT_FOUND
@@ -186,9 +187,9 @@ def delete_account(authorization: Optional[str] = Header(None)) -> DeleteAccount
 			)
 		)
 
-    with get_cursor("sqlmate") as cur:
+    with sqlmate_session_scope() as session:
         try:
-            cur.execute("DELETE FROM users WHERE username = %s", (username,))
+            session.execute(text("DELETE FROM users WHERE username = :username"), {"username": username})
         except mysql.connector.Error as e:
             print(e)
             return DeleteAccountResponse(
@@ -199,9 +200,9 @@ def delete_account(authorization: Optional[str] = Header(None)) -> DeleteAccount
 			)
         
     # Execute the stored procedure to drop the tables that were marked for deletion in the previous step
-    with get_cursor() as cur:
+    with user_session_scope() as session:
         try:
-            cur.callproc("process_tables_to_drop")
+            session.execute(text("CALL process_tables_to_drop()"))
         except mysql.connector.Error as e:
             print(e)
             return DeleteAccountResponse(

@@ -1,6 +1,6 @@
-from classes.queries.update import UpdateQuery
-from classes.queries.base import BaseQuery
-from classes.metadata import metadata
+from backend.src.classes.queries.update import UpdateQuery
+from backend.src.classes.queries.base import BaseQuery
+from backend.src.classes.metadata import metadata
 from typing import List
 
 

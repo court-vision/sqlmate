@@ -1,6 +1,6 @@
-from ..metadata import metadata
+from sqlmate_backend.classes.metadata import metadata
 from typing import List
-from ..http import QueryParams, UpdateQueryParams
+from sqlmate_backend.classes.http import QueryParams, UpdateQueryParams
 
 
 # Class that will be used to initialize a TableQuery object

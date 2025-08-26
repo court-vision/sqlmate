@@ -1,10 +1,10 @@
-from utils.db import get_cursor, get_timestamp
-from utils.serialization import query_output_to_table
-from utils.auth import check_user
-from utils.generators import generate_update_query
-from classes.http import StatusResponse, Table, UpdateQueryParams
-from classes.queries.update import UpdateQuery
-from classes.metadata import metadata
+from backend.src.utils.serialization import query_output_to_table
+from backend.src.utils.auth import check_user
+from backend.src.utils.generators import generate_update_query
+from backend.src.utils.db import get_cursor, get_timestamp
+from backend.src.classes.http import StatusResponse, Table, UpdateQueryParams
+from backend.src.classes.queries.update import UpdateQuery
+from backend.src.classes.metadata import metadata
 
 
 from typing import Any, Dict, List, Optional

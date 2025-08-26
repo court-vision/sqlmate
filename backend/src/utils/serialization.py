@@ -1,4 +1,4 @@
-from classes.http import Table
+from backend.src.classes.http import Table
 
 def query_output_to_table(query_output: list[tuple], column_names: list[str], query_body: str, num_tables: int) -> Table:
 	if not query_output:

@@ -16,11 +16,11 @@
       },
       {
         "name": "image_url",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(100)"
       },
       {
         "name": "spotify_id",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(50)"
       }
     ]
   },
@@ -37,11 +37,11 @@
       },
       {
         "name": "genres",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(350)"
       },
       {
         "name": "spotify_id",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(50)"
       }
     ]
   },
@@ -70,7 +70,7 @@
       },
       {
         "name": "explicit",
-        "type": "BOOLEAN"
+        "type": "TINYINT(1)"
       },
       {
         "name": "popularity",
@@ -126,15 +126,15 @@
       },
       {
         "name": "isrc",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(50)"
       },
       {
         "name": "label",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(100)"
       },
       {
         "name": "spotify_id",
-        "type": "VARCHAR(255)"
+        "type": "VARCHAR(50)"
       }
     ]
   }
