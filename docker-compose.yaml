@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    env_file:
+      - ~/.sqlmate/secrets.env
+    ports:
+      - "8080:8080"
+    # dev-only:
+    # volumes:
+    #   - ./src:/app/src
+    #   - ./:/app
+    # command: ["sqlmate-backend", "--reload"]  # or uvicorn with --reload
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+      args:
+        - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+    ports:
+      - "3000:3000"

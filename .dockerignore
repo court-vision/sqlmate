@@ -1,0 +1,12 @@
+.git
+**/__pycache__/
+**/*.pyc
+.venv
+.env
+node_modules
+frontend/.next
+dist
+build
+.idea
+.vscode
+.DS_Store

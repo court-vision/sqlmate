@@ -1,3 +1,0 @@
-UPDATE u_james_top_artist_tracks
-SET u_james_top_artist_tracks.max_tracks_popularity=99
-WHERE u_james_top_artist_tracks.artists_name LIKE 'Taylor%';

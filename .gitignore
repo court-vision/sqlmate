@@ -2,7 +2,7 @@ data/worker.ipynb
 **/__pycache__
 frontend/.next
 frontend/src/Example UI.jpeg
-backend/secrets.env
+**/secrets.env
 .venv/
 **/__init__.py
 # frontend/next.config.js

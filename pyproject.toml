@@ -32,9 +32,11 @@ dependencies = [
   "uvicorn>=0.34.2",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["backend*", "cli*"]
-
 [project.scripts]
-sqlmate = "cli.cli:main"
+sqlmate = "sqlmate.cli.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

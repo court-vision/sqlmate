@@ -1,7 +1,0 @@
-album_artists: album_artists.album_id=albums.id, album_artists.artist_id=artists.id
-albums: albums.id=album_artists.album_id, albums.id=tracks.album_id
-artists: artists.id=album_artists.artist_id, artists.id=track_artists.artist_id
-track_artists: track_artists.track_id=tracks.id, track_artists.artist_id=artists.id
-tracks: tracks.id=track_artists.track_id, tracks.album_id=albums.id
-user_tables: user_tables.username=users.username
-users: users.username=user_tables.username
