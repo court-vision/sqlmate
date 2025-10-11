@@ -26,7 +26,7 @@ class SQLAlchemyDB:
                 - DB_PORT: Database port (optional)
                 - DB_TYPE: Database type ("mysql", "postgresql", etc.) (default: "mysql")
         """
-        self.host = credentials.get("DB_HOST", "localhost")
+        self.host = credentials.get("DB_HOST", "")
         self.user = credentials.get("DB_USER", "root")
         self.password = credentials.get("DB_PASS", "")
         self.database = credentials.get("DB_NAME", "")
