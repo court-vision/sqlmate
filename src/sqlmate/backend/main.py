@@ -17,10 +17,14 @@ app.add_middleware(
 def home():
     return "Welcome to SQLMate API!"
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "message": "SQLMate API is running"}
+
 app.include_router(router=auth.router, prefix="/auth")
 app.include_router(router=user_data.router, prefix="/users")
 app.include_router(router=query.router, prefix="/query")
 
 if __name__ == "__main__":
     # We're installed as a package
-    uvicorn.run("backend.src.app:app", host="0.0.0.0", port=PORT)
+    uvicorn.run("sqlmate.backend.main:app", host="0.0.0.0", port=PORT)

@@ -3,7 +3,13 @@ import os
 
 ENV_PATH = os.path.join(os.path.expanduser('~'), '.sqlmate', 'secrets.env')
 
-load_dotenv(ENV_PATH if os.path.exists(ENV_PATH) else 'secrets.env')
+# Load environment variables from multiple sources
+# Railway and other cloud providers set environment variables directly
+if os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH)
+elif os.path.exists('secrets.env'):
+    load_dotenv('secrets.env')
+# Otherwise, rely on environment variables already set by the deployment platform
 
 # Port
 PORT = int(os.getenv("PORT", 8080))
