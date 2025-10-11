@@ -53,9 +53,6 @@ class SQLAlchemyDB:
             pool_timeout=30,
             pool_recycle=1800  # Recycle connections after 30 minutes
         )
-
-        print(conn_string)
-        self.connection = self.engine.connect()
     
     def close(self) -> None:
         """Close the database connection pool."""
