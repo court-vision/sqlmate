@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import pytz
 
 from sqlmate.backend.classes.database import SQLAlchemyDB
-from sqlmate.backend.utils.constants import DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_TYPE
+from sqlmate.backend.utils.constants import DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, DB_TYPE
 
 
 def get_timestamp() -> str:
@@ -28,6 +28,7 @@ db_config = {
     "DB_HOST": DB_HOST,
     "DB_USER": DB_USER,
     "DB_PASS": DB_PASS,
+    "DB_PORT": DB_PORT,
     "DB_TYPE": DB_TYPE,
 }
 

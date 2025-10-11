@@ -29,7 +29,6 @@ src/sqlmate/backend/utils/serialization.py
 src/sqlmate/cli/__init__.py
 src/sqlmate/cli/__main__.py
 src/sqlmate/cli/cli.py
-src/sqlmate/cli/main.py
 src/sqlmate/cli/setup/db_setup.py
 src/sqlmate/cli/setup/env_setup.py
 src/sqlmate/cli/setup/sql/database.py

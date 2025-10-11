@@ -76,6 +76,8 @@ def initialize_database(credentials: dict) -> bool:
     #     print(f"❌ Database '{credentials['DB_NAME']}' does not exist. Please create it first.")
     #     return False
     print(f"✅ Database '{credentials['DB_NAME']}' found.")
+
+    print()
     # Create the 'sqlmate' database if it doesn't exist
     db.execute(CREATE_SQLMATE_DATABASE, err_msg="❌ Error creating 'sqlmate' database. Make sure you have the necessary permissions.")
     

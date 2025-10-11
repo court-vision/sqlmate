@@ -18,6 +18,7 @@ def generate_defaults() -> dict:
         "DB_USER": "root",
         "DB_PASS": "",
         "DB_NAME": "sqlmate",
+        "DB_PORT": "3306",
         "JWT_SECRET": secrets.token_urlsafe(16),
     }
 
@@ -42,6 +43,7 @@ def prompt_for_credentials(defaults: dict) -> dict:
     credentials["DB_USER"] = input(f"Database User [{defaults['DB_USER']}]: ") or defaults["DB_USER"]
     credentials["DB_PASS"] = getpass.getpass("Database Password: ") or defaults["DB_PASS"]
     credentials["DB_NAME"] = input(f"Database Name [{defaults['DB_NAME']}]: ") or defaults["DB_NAME"]
+    credentials["DB_PORT"] = input(f"Database Port [{defaults['DB_PORT']}]: ") or defaults["DB_PORT"]
     credentials["JWT_SECRET"] = defaults["JWT_SECRET"]
     
     return credentials
