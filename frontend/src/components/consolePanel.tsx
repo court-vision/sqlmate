@@ -85,7 +85,7 @@ export function ConsolePanel({
 
   return (
     <div className="h-full flex flex-col glass border-t border-white/10">
-      <div className="flex items-center justify-between px-4 h-10">
+      <div className="flex items-center justify-between px-4 h-10 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <Button
             variant="secondary"
@@ -124,9 +124,9 @@ export function ConsolePanel({
           <SaveIcon size={14} /> Save Table
         </Button>
       </div>
-      <div className="flex-1 p-4 overflow-auto">
+      <div className="flex-1 min-h-0 p-4 overflow-auto">
         {activeTab === "results" ? (
-          <div className="h-full font-mono text-sm p-3 glass rounded animate-slide-up">
+          <div className="font-mono text-sm p-3 glass rounded animate-slide-up min-h-full">
             {consoleOutput?.error ? (
               <div className="p-4 rounded-md glass border border-red-400/50 text-red-400">
                 <div className="flex items-center">
@@ -136,7 +136,7 @@ export function ConsolePanel({
                 </div>
               </div>
             ) : consoleOutput ? (
-              <QueryResultTable data={consoleOutput} />
+              <QueryResultTable data={consoleOutput} itemsPerPage={10} />
             ) : (
               <p className="text-muted-foreground">No results to display</p>
             )}
