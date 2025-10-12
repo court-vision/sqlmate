@@ -291,8 +291,8 @@ export function StudioCanvas({
       className="flex-1 p-6 h-full overflow-auto relative flex flex-col"
       style={{ zIndex: 1 }}
     >
-      {/* Full-height container div to push the button to the bottom */}
-      <div className="flex-1 flex flex-col">
+      {/* Full-height container div with bottom padding to prevent overlap */}
+      <div className="flex-1 flex flex-col pb-64 relative">
         {/* Dropped tables display area */}
         {droppedTables.length > 0 && (
           <div className="mb-4">
@@ -326,21 +326,21 @@ export function StudioCanvas({
         {/* Drag and drop area - takes up remaining space */}
         <div
           ref={setNodeRef}
-          className={`flex-grow flex flex-col items-center justify-center p-4 border-2 ${
+          className={`flex-grow flex flex-col items-center justify-center p-8 border-2 min-h-64 ${
             isOver
               ? "border-primary border-dashed bg-primary/10 animate-glow"
               : "border-white/20 border-dashed"
           } rounded-lg transition-all-smooth glass`}
         >
           {isOver ? (
-            <div className="text-center p-4">
+            <div className="text-center p-6">
               <p className="text-lg font-medium gradient-text animate-pulse-slow">
                 Drop here to add to your query
               </p>
             </div>
           ) : (
-            <div className="text-center p-4 w-full">
-              <p className="mb-4 text-muted-foreground">
+            <div className="text-center p-6 w-full">
+              <p className="mb-6 text-muted-foreground text-base">
                 {droppedTables.length === 0
                   ? "Build your query by dropping tables here"
                   : "Drop more tables to add to your query"}
@@ -348,14 +348,11 @@ export function StudioCanvas({
             </div>
           )}
         </div>
-      </div>
 
-      {/* Button Container - at the bottom */}
-      <div className="flex justify-end mt-auto pt-4 items-center gap-2">
-        {/* Order By Priority Panel */}
+        {/* Sticky Order By Priority Panel - bottom left */}
         {orderByPriority.length > 1 && (
-          <div className="mr-auto">
-            <div className="glass rounded-md p-2 max-w-md animate-float">
+          <div className="absolute bottom-6 left-6 z-50">
+            <div className="glass rounded-md p-2 max-w-md">
               <h4 className="text-xs font-medium mb-1 gradient-text">
                 Order By Priority
               </h4>
@@ -403,30 +400,36 @@ export function StudioCanvas({
             </div>
           </div>
         )}
-        <div className="flex items-center">
-          <label
-            htmlFor="query-limit"
-            className="text-sm mr-2 text-muted-foreground"
-          >
-            Limit:
-          </label>
-          <input
-            id="query-limit"
-            type="number"
-            min="1"
-            className="w-20 px-2 py-1 text-sm glass-input rounded focus:outline-none focus:ring-1 focus:ring-primary transition-all-smooth"
-            placeholder="None"
-            value={queryLimit || ""}
-            onChange={handleLimitChange}
-            aria-label="Query result limit"
-          />
+
+        {/* Sticky Button Container - floats above scrolling content */}
+        <div className="absolute bottom-6 right-6 z-50">
+          <div className="glass rounded-lg p-4 backdrop-blur-md border border-white/10 flex items-center gap-2">
+            <div className="flex items-center">
+              <label
+                htmlFor="query-limit"
+                className="text-sm mr-2 text-muted-foreground"
+              >
+                Limit:
+              </label>
+              <input
+                id="query-limit"
+                type="number"
+                min="1"
+                className="w-20 px-2 py-1 text-sm glass-input rounded focus:outline-none focus:ring-1 focus:ring-primary transition-all-smooth"
+                placeholder="None"
+                value={queryLimit || ""}
+                onChange={handleLimitChange}
+                aria-label="Query result limit"
+              />
+            </div>
+            <Button
+              className="gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth cursor-pointer"
+              onClick={handleRunVisualQuery}
+            >
+              Run Query
+            </Button>
+          </div>
         </div>
-        <Button
-          className="gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth cursor-pointer"
-          onClick={handleRunVisualQuery}
-        >
-          Run Query
-        </Button>
       </div>
     </div>
   );

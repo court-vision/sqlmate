@@ -6,5 +6,6 @@ frontend/src/Example UI.jpeg
 .venv/
 **/__init__.py
 migrate_mysql_to_mysql.py
+add_foreign_keys.py
 # frontend/next.config.js
 # frontend/next.config.2.ts

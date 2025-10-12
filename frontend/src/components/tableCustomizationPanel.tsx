@@ -437,7 +437,7 @@ export function TableCustomizationPanel({
           </Button>
 
           {showAddDropdown && availableColumns.length > 0 && (
-            <div className="absolute right-0 top-full mt-1 w-48 glass shadow-lg rounded-md border border-white/10 z-50 max-h-48 overflow-y-auto animate-slide-up">
+            <div className="absolute right-0 top-full mt-1 w-48 glass shadow-lg rounded-md border border-white/10 z-[9999] max-h-48 overflow-y-auto animate-slide-up">
               {availableColumns.map((col) => (
                 <div
                   key={col.name}

@@ -155,8 +155,6 @@ class Metadata:
 
 with session_scope("user") as cur:
 	metadata: Metadata = Metadata()
-	# with open("logs/metadata.txt", "w") as f:
-	# 		f.write(str(metadata))
 
 """tracks JOIN artists -> tracks JOIN track_artists ON ... JOIN artists ON ...
 
