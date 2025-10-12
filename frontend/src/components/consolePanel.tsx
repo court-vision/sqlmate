@@ -13,9 +13,16 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AlertCircle, SaveIcon } from "lucide-react";
 import { postUserTable } from "@/lib/apiClient";
 import { toast } from "./ui/use-toast";
+import { useAuth } from "@/contexts/authContext";
 
 export function ConsolePanel({
   consoleOutput,
@@ -31,8 +38,20 @@ export function ConsolePanel({
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const handleSaveTable = async () => {
+    // Check authentication first
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save tables",
+        variant: "destructive",
+      });
+      router.push("/login");
+      return;
+    }
+
     if (!queryOutput) {
       setSaveError("No query results to save");
       return;
@@ -114,15 +133,26 @@ export function ConsolePanel({
         </div>
 
         {/* Save Table Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-sm px-3 py-1 h-auto flex items-center gap-1 glass hover:bg-primary/20 hover-glow transition-all-smooth"
-          onClick={() => setShowSaveDialog(true)}
-          disabled={!consoleOutput || !queryOutput}
-        >
-          <SaveIcon size={14} /> Save Table
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-sm px-3 py-1 h-auto flex items-center gap-1 glass hover:bg-primary/20 hover-glow transition-all-smooth"
+                onClick={() => setShowSaveDialog(true)}
+                disabled={!consoleOutput || !queryOutput || !isAuthenticated}
+              >
+                <SaveIcon size={14} /> Save Table
+              </Button>
+            </TooltipTrigger>
+            {!isAuthenticated && (
+              <TooltipContent>
+                <p>Please sign in to save tables</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
       <div className="flex-1 min-h-0 p-4 overflow-auto">
         {activeTab === "results" ? (
