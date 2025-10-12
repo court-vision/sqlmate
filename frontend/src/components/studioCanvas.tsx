@@ -292,7 +292,7 @@ export function StudioCanvas({
       style={{ zIndex: 1 }}
     >
       {/* Full-height container div with bottom padding to prevent overlap */}
-      <div className="flex-1 flex flex-col pb-64 relative">
+      <div className="flex-1 flex flex-col pb-20 relative">
         {/* Dropped tables display area */}
         {droppedTables.length > 0 && (
           <div className="mb-4">
@@ -326,7 +326,7 @@ export function StudioCanvas({
         {/* Drag and drop area - takes up remaining space */}
         <div
           ref={setNodeRef}
-          className={`flex-grow flex flex-col items-center justify-center p-8 border-2 min-h-64 ${
+          className={`flex-grow flex flex-col items-center justify-center p-8 border-2 min-h-84 ${
             isOver
               ? "border-primary border-dashed bg-primary/10 animate-glow"
               : "border-white/20 border-dashed"

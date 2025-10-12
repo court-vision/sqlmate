@@ -73,8 +73,12 @@ export function TableCustomizationPanel({
     }));
   });
 
-  // State for showing the add attribute dropdown
-  const [showAddDropdown, setShowAddDropdown] = useState(false);
+  // State for showing the add attribute mode
+  const [showAddMode, setShowAddMode] = useState(false);
+  // State to track which attributes are selected for adding
+  const [selectedAttributes, setSelectedAttributes] = useState<
+    Record<string, boolean>
+  >({});
   // State to track alias validation errors
   const [aliasErrors, setAliasErrors] = useState<Record<string, boolean>>({});
 
@@ -204,24 +208,60 @@ export function TableCustomizationPanel({
     }
   };
 
-  // Add a specific column from available columns
-  const addSpecificColumn = (columnName: string, columnType: string) => {
+  // Toggle add mode
+  const toggleAddMode = () => {
+    setShowAddMode(!showAddMode);
+    if (!showAddMode) {
+      // Initialize selected attributes when entering add mode
+      const initialSelection: Record<string, boolean> = {};
+      availableColumns.forEach((col) => {
+        initialSelection[col.name] = false;
+      });
+      setSelectedAttributes(initialSelection);
+    } else {
+      // Clear selections when exiting add mode
+      setSelectedAttributes({});
+    }
+  };
+
+  // Toggle attribute selection
+  const toggleAttributeSelection = (columnName: string) => {
+    setSelectedAttributes((prev) => ({
+      ...prev,
+      [columnName]: !prev[columnName],
+    }));
+  };
+
+  // Add selected attributes
+  const addSelectedAttributes = () => {
+    const selectedColumns = availableColumns.filter(
+      (col) => selectedAttributes[col.name]
+    );
+
     setColumns((cols) => [
       ...cols,
-      {
-        name: columnName,
-        type: columnType,
+      ...selectedColumns.map((col) => ({
+        name: col.name,
+        type: col.type,
         alias: "",
         constraint: { operator: "", value: "" },
         groupBy: false,
         aggregate: "",
-        orderBy: "NONE", // Initialize order by as NONE
-        id: `${tableName}-${columnName}-${Math.random()
+        orderBy: "NONE" as const,
+        id: `${tableName}-${col.name}-${Math.random()
           .toString(36)
           .substr(2, 9)}`,
-      },
+      })),
     ]);
-    setShowAddDropdown(false);
+
+    setShowAddMode(false);
+    setSelectedAttributes({});
+  };
+
+  // Cancel add mode
+  const cancelAddMode = () => {
+    setShowAddMode(false);
+    setSelectedAttributes({});
   };
 
   // Remove a column row
@@ -283,6 +323,7 @@ export function TableCustomizationPanel({
             </tr>
           </thead>
           <tbody>
+            {/* Existing columns */}
             {columns.map((column) => (
               <tr
                 key={column.id}
@@ -416,16 +457,106 @@ export function TableCustomizationPanel({
                 </td>
               </tr>
             ))}
+
+            {/* Available columns in add mode */}
+            {showAddMode &&
+              availableColumns.map((column) => (
+                <tr
+                  key={`add-${column.name}`}
+                  className={`border-b border-white/10 hover:bg-white/5 transition-all-smooth cursor-pointer ${
+                    selectedAttributes[column.name]
+                      ? "bg-primary/10"
+                      : "opacity-60"
+                  }`}
+                  onClick={() => toggleAttributeSelection(column.name)}
+                >
+                  <td className="py-1 px-2 w-[140px]">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox h-3 w-3 accent-primary"
+                        checked={selectedAttributes[column.name] || false}
+                        onChange={() => toggleAttributeSelection(column.name)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {column.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-1 px-2 w-[80px]">
+                    <span className="text-xs text-muted-foreground">
+                      {column.type}
+                    </span>
+                  </td>
+                  <td className="py-1 px-2 w-[100px]">
+                    <span className="text-xs text-muted-foreground opacity-50">
+                      -
+                    </span>
+                  </td>
+                  <td className="py-1 px-2 w-[200px]">
+                    <span className="text-xs text-muted-foreground opacity-50">
+                      -
+                    </span>
+                  </td>
+                  <td className="py-1 px-2 w-[60px] text-center">
+                    <span className="text-xs text-muted-foreground opacity-50">
+                      -
+                    </span>
+                  </td>
+                  {showAggregation && (
+                    <td className="py-1 px-2 w-[160px]">
+                      <span className="text-xs text-muted-foreground opacity-50">
+                        -
+                      </span>
+                    </td>
+                  )}
+                  <td className="py-1 pr-2 w-[60px] text-center">
+                    <span className="text-xs text-muted-foreground opacity-50">
+                      -
+                    </span>
+                  </td>
+                  <td className="py-1 px-2 w-[40px]">
+                    <span className="text-xs text-muted-foreground opacity-50">
+                      -
+                    </span>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
 
-      <div className="mt-2 flex justify-end relative">
-        <div className="relative">
+      <div className="mt-2 flex justify-end gap-2">
+        {showAddMode ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cancelAddMode}
+              className="text-xs flex items-center gap-1 h-6 glass hover:bg-red-500/20 hover:text-red-400 transition-all-smooth"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={addSelectedAttributes}
+              disabled={!Object.values(selectedAttributes).some(Boolean)}
+              className={`text-xs flex items-center gap-1 h-6 glass hover:bg-primary/20 hover-glow transition-all-smooth ${
+                !Object.values(selectedAttributes).some(Boolean)
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              <PlusIcon size={12} /> Add Selected
+            </Button>
+          </>
+        ) : (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowAddDropdown(!showAddDropdown)}
+            onClick={toggleAddMode}
             disabled={availableColumns.length === 0}
             className={`text-xs flex items-center gap-1 h-6 glass hover:bg-primary/20 hover-glow transition-all-smooth ${
               availableColumns.length === 0
@@ -433,26 +564,9 @@ export function TableCustomizationPanel({
                 : ""
             }`}
           >
-            <PlusIcon size={12} /> Add attribute <ChevronDownIcon size={12} />
+            <PlusIcon size={12} /> Add attribute
           </Button>
-
-          {showAddDropdown && availableColumns.length > 0 && (
-            <div className="absolute right-0 top-full mt-1 w-48 glass shadow-lg rounded-md border border-white/10 z-[9999] max-h-48 overflow-y-auto animate-slide-up">
-              {availableColumns.map((col) => (
-                <div
-                  key={col.name}
-                  className="px-3 py-2 text-xs hover:bg-white/10 cursor-pointer flex justify-between items-center transition-all-smooth"
-                  onClick={() => addSpecificColumn(col.name, col.type)}
-                >
-                  <span className="font-medium">{col.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {col.type}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </Card>
   );
