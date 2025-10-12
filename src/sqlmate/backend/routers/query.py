@@ -24,6 +24,8 @@ class QueryResponse(BaseModel):
 def run_query(req: QueryRequest, response: Response) -> QueryResponse:
 	# Validate the input data
 	try:
+		if not req.query_params:
+			raise ValueError("No query parameters provided")
 		query: List[BaseQuery] = [BaseQuery(details) for details in req.query_params]
 	except ValueError as e:
 		print(e)
@@ -31,7 +33,7 @@ def run_query(req: QueryRequest, response: Response) -> QueryResponse:
 		return QueryResponse(
 			status=StatusResponse(
 				status="error",
-				message=f"Invalid query parameters: {str(e)}"
+				message=str(e)
 			),
 			table=None
 		)
