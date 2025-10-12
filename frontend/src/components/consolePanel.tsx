@@ -69,7 +69,6 @@ export function ConsolePanel({
         setSaveSuccess(null);
       }, 800);
     } catch (error: any) {
-
       toast({
         title: "Save Failed",
         description: error.message || "Failed to save table",
@@ -85,14 +84,16 @@ export function ConsolePanel({
   };
 
   return (
-    <div className="h-full flex flex-col border-t border-console-border bg-console">
+    <div className="h-full flex flex-col glass border-t border-white/10">
       <div className="flex items-center justify-between px-4 h-10">
         <div className="flex items-center space-x-4">
           <Button
             variant="secondary"
             size="sm"
-            className={`text-sm px-3 py-1 h-auto ${
-              activeTab === "query" ? "bg-background" : ""
+            className={`text-sm px-3 py-1 h-auto transition-all-smooth ${
+              activeTab === "results"
+                ? "gradient-primary text-white"
+                : "glass hover:bg-white/10"
             }`}
             onClick={() => setActiveTab("results")}
           >
@@ -101,8 +102,10 @@ export function ConsolePanel({
           <Button
             variant="secondary"
             size="sm"
-            className={`text-sm px-3 py-1 h-auto ${
-              activeTab === "results" ? "bg-background" : ""
+            className={`text-sm px-3 py-1 h-auto transition-all-smooth ${
+              activeTab === "query"
+                ? "gradient-primary text-white"
+                : "glass hover:bg-white/10"
             }`}
             onClick={() => setActiveTab("query")}
           >
@@ -114,7 +117,7 @@ export function ConsolePanel({
         <Button
           variant="outline"
           size="sm"
-          className="text-sm px-3 py-1 h-auto flex items-center gap-1"
+          className="text-sm px-3 py-1 h-auto flex items-center gap-1 glass hover:bg-primary/20 hover-glow transition-all-smooth"
           onClick={() => setShowSaveDialog(true)}
           disabled={!consoleOutput || !queryOutput}
         >
@@ -123,9 +126,9 @@ export function ConsolePanel({
       </div>
       <div className="flex-1 p-4 overflow-auto">
         {activeTab === "results" ? (
-          <div className="h-full font-mono text-sm p-3 bg-background rounded border border-border">
+          <div className="h-full font-mono text-sm p-3 glass rounded animate-slide-up">
             {consoleOutput?.error ? (
-              <div className="p-4 rounded-md bg-red-50 border border-red-200 text-red-700">
+              <div className="p-4 rounded-md glass border border-red-400/50 text-red-400">
                 <div className="flex items-center">
                   <AlertCircle className="h-5 w-5 mr-2" />
                   <span className="font-medium">Query Error: </span>
@@ -135,17 +138,17 @@ export function ConsolePanel({
             ) : consoleOutput ? (
               <QueryResultTable data={consoleOutput} />
             ) : (
-              <p>No results to display</p>
+              <p className="text-muted-foreground">No results to display</p>
             )}
           </div>
         ) : (
-          <div className="font-mono text-sm p-3 bg-background rounded border border-border h-full">
+          <div className="font-mono text-sm p-3 glass rounded h-full animate-slide-up">
             {queryOutput ? (
               <pre className="whitespace-pre-wrap break-words">
                 {queryOutput}
               </pre>
             ) : (
-              <p>No query to display</p>
+              <p className="text-muted-foreground">No query to display</p>
             )}
           </div>
         )}
@@ -153,9 +156,9 @@ export function ConsolePanel({
 
       {/* Save Table Dialog */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] glass-panel">
           <DialogHeader>
-            <DialogTitle>Save Table</DialogTitle>
+            <DialogTitle className="gradient-text">Save Table</DialogTitle>
             <DialogDescription>
               Enter a name for your table. This table will be saved to your
               account and can be accessed later.
@@ -175,24 +178,33 @@ export function ConsolePanel({
                   setTableName(e.target.value);
                   setSaveError(null);
                 }}
-                className={saveError ? "border-red-500" : ""}
+                className={`glass-input transition-all-smooth ${
+                  saveError
+                    ? "border-red-500 focus:ring-red-500"
+                    : "focus:ring-primary"
+                }`}
               />
-              {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+              {saveError && <p className="text-sm text-red-400">{saveError}</p>}
               {saveSuccess && (
-                <p className="text-sm text-green-500">{saveSuccess}</p>
+                <p className="text-sm text-green-400">{saveSuccess}</p>
               )}
             </div>
           </div>
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline" disabled={isSaving}>
+              <Button
+                variant="outline"
+                disabled={isSaving}
+                className="glass hover:bg-white/10 transition-all-smooth"
+              >
                 Cancel
               </Button>
             </DialogClose>
             <Button
               onClick={handleSaveTable}
               disabled={isSaving || !tableName.trim()}
+              className="gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth"
             >
               {isSaving ? "Saving..." : "Save"}
             </Button>

@@ -177,14 +177,14 @@ export default function MyTablesPage() {
       <Header />
       <div className="container mx-auto py-8 max-w-4xl flex-1">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Saved Tables</h1>
+          <h1 className="text-2xl font-bold gradient-text">My Saved Tables</h1>
           <div className="flex gap-2">
             {selectedTables.length > 0 && (
               <Button
                 variant="destructive"
                 onClick={handleBulkDelete}
                 disabled={deleteLoading}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 glass hover:bg-red-500/20 hover-glow transition-all-smooth"
               >
                 <TrashIcon size={16} />
                 Delete Selected ({selectedTables.length})
@@ -194,7 +194,7 @@ export default function MyTablesPage() {
               variant="outline"
               onClick={fetchTables}
               disabled={isLoading}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 glass hover:bg-white/10 hover-glow transition-all-smooth"
             >
               <RefreshCw
                 size={16}
@@ -206,17 +206,17 @@ export default function MyTablesPage() {
         </div>
 
         {error && (
-          <Card className="p-4 mb-6 bg-red-50 border-red-200 text-red-700">
+          <Card className="p-4 mb-6 glass border border-red-400/50 text-red-400 animate-slide-up">
             <p>{error}</p>
           </Card>
         )}
 
         {isLoading ? (
           <div className="flex justify-center items-center p-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="spinner-gradient h-12 w-12"></div>
           </div>
         ) : tables.length === 0 ? (
-          <Card className="p-6 text-center bg-muted/20">
+          <Card className="p-6 text-center glass hover-lift transition-all-smooth animate-slide-up">
             <p className="text-muted-foreground mb-4">
               You don&apos;t have any saved tables yet.
             </p>
@@ -226,10 +226,10 @@ export default function MyTablesPage() {
             </p>
           </Card>
         ) : (
-          <div className="overflow-hidden rounded-md border">
+          <div className="overflow-hidden rounded-md glass animate-slide-up">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-muted/50 border-b">
+                <tr className="bg-white/5 border-b border-white/10">
                   <th className="py-3 px-4 text-left font-medium w-10">
                     <Checkbox
                       checked={
@@ -240,11 +240,15 @@ export default function MyTablesPage() {
                       aria-label="Select all tables"
                     />
                   </th>
-                  <th className="py-3 px-4 text-left font-medium">
+                  <th className="py-3 px-4 text-left font-medium gradient-text">
                     Table Name
                   </th>
-                  <th className="py-3 px-4 text-left font-medium">Created</th>
-                  <th className="py-3 px-4 text-right font-medium">Actions</th>
+                  <th className="py-3 px-4 text-left font-medium gradient-text">
+                    Created
+                  </th>
+                  <th className="py-3 px-4 text-right font-medium gradient-text">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -252,8 +256,8 @@ export default function MyTablesPage() {
                   <tr
                     key={table.table_name}
                     className={`${
-                      index % 2 === 0 ? "bg-background" : "bg-muted/20"
-                    } hover:bg-muted/40 transition-colors`}
+                      index % 2 === 0 ? "bg-white/5" : "bg-white/10"
+                    } hover:bg-white/15 transition-all-smooth`}
                   >
                     <td className="py-3 px-4">
                       <Checkbox
@@ -277,28 +281,28 @@ export default function MyTablesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-blue-500/20 hover-glow transition-all-smooth"
                           onClick={() => handleEditTable(table.table_name)}
                         >
-                          <PencilIcon size={16} className="text-blue-500" />
+                          <PencilIcon size={16} className="text-blue-400" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-red-500/20 hover-glow transition-all-smooth"
                           onClick={() => handleDeleteTable(table.table_name)}
                           disabled={deleteLoading}
                         >
-                          <TrashIcon size={16} className="text-red-500" />
+                          <TrashIcon size={16} className="text-red-400" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-green-500/20 hover-glow transition-all-smooth"
                           onClick={() => handleDownloadCSV(table.table_name)}
                           disabled={downloadLoading === table.table_name}
                         >
-                          <Download size={16} className="text-green-500" />
+                          <Download size={16} className="text-green-400" />
                         </Button>
                       </div>
                     </td>

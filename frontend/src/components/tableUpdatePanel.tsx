@@ -141,17 +141,19 @@ export function TableUpdatePanel({
     constraints.some((c) => c.attribute && c.operator);
 
   return (
-    <Card className="p-4 mb-6">
-      <h2 className="text-lg font-medium mb-3">Update Table</h2>
+    <Card className="p-4 mb-6 glass hover-lift transition-all-smooth animate-slide-up">
+      <h2 className="text-lg font-medium mb-3 gradient-text">Update Table</h2>
 
       {/* Updates Section */}
       <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2">Set New Values</h3>
+        <h3 className="text-sm font-medium mb-2 gradient-text">
+          Set New Values
+        </h3>
         <div className="space-y-2 mb-2">
           {updates.map((update) => (
             <div key={update.id} className="flex items-center gap-2">
               <select
-                className="bg-transparent border border-input rounded px-2 py-1 flex-1"
+                className="glass-input rounded px-2 py-1 flex-1 transition-all-smooth focus:ring-primary"
                 value={update.attribute}
                 onChange={(e) =>
                   handleUpdateAttributeChange(update.id, e.target.value)
@@ -167,7 +169,7 @@ export function TableUpdatePanel({
               <span className="text-muted-foreground">=</span>
               <input
                 type="text"
-                className="bg-transparent border border-input rounded px-2 py-1 flex-1"
+                className="glass-input rounded px-2 py-1 flex-1 transition-all-smooth focus:ring-primary"
                 placeholder="New value"
                 value={update.value}
                 onChange={(e) =>
@@ -179,7 +181,7 @@ export function TableUpdatePanel({
                 size="sm"
                 onClick={() => removeUpdateRow(update.id)}
                 disabled={updates.length <= 1}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all-smooth"
               >
                 <Trash2Icon size={14} />
               </Button>
@@ -189,7 +191,7 @@ export function TableUpdatePanel({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs glass hover:bg-white/10 hover-glow transition-all-smooth"
           onClick={addUpdateRow}
         >
           <PlusIcon size={12} className="mr-1" /> Add Field
@@ -198,12 +200,14 @@ export function TableUpdatePanel({
 
       {/* Constraints Section */}
       <div className="mb-4">
-        <h3 className="text-sm font-medium mb-2">Where (Constraints)</h3>
+        <h3 className="text-sm font-medium mb-2 gradient-text">
+          Where (Constraints)
+        </h3>
         <div className="space-y-2 mb-2">
           {constraints.map((constraint) => (
             <div key={constraint.id} className="flex items-center gap-2">
               <select
-                className="bg-transparent border border-input rounded px-2 py-1 flex-1"
+                className="glass-input rounded px-2 py-1 flex-1 transition-all-smooth focus:ring-primary"
                 value={constraint.attribute}
                 onChange={(e) =>
                   handleConstraintAttributeChange(constraint.id, e.target.value)
@@ -259,7 +263,7 @@ export function TableUpdatePanel({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs"
+          className="text-xs glass hover:bg-white/10 hover-glow transition-all-smooth"
           onClick={addConstraintRow}
         >
           <PlusIcon size={12} className="mr-1" /> Add Constraint
@@ -271,9 +275,16 @@ export function TableUpdatePanel({
         <Button
           onClick={handleSubmit}
           disabled={!canSubmit || isSubmitting}
-          className="w-full md:w-auto"
+          className="w-full md:w-auto gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth"
         >
-          {isSubmitting ? "Updating..." : "Update Table"}
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="spinner-gradient w-4 h-4"></div>
+              Updating...
+            </div>
+          ) : (
+            "Update Table"
+          )}
         </Button>
       </div>
     </Card>

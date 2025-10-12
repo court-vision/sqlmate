@@ -230,14 +230,14 @@ export function TableCustomizationPanel({
   };
 
   return (
-    <Card className="mb-4 p-2 shadow-sm">
-      <div className="flex justify-between items-center border-b pb-2 mb-2">
-        <h3 className="text-sm font-medium">{tableName}</h3>
+    <Card className="mb-4 p-2 glass hover-lift transition-all-smooth animate-slide-up">
+      <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-2">
+        <h3 className="text-sm font-medium gradient-text">{tableName}</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="h-6 w-6 p-0"
+          className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all-smooth"
         >
           ×
         </Button>
@@ -246,15 +246,24 @@ export function TableCustomizationPanel({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b">
-              <th className="text-left py-1 pr-4">Attribute</th>
-              <th className="text-left py-1 pr-4">Type</th>
-              <th className="text-left py-1 pr-4" colSpan={2}>
+            <tr className="border-b border-white/10">
+              <th className="text-left py-1 pr-4 text-muted-foreground">
+                Attribute
+              </th>
+              <th className="text-left py-1 pr-4 text-muted-foreground">
+                Type
+              </th>
+              <th
+                className="text-left py-1 pr-4 text-muted-foreground"
+                colSpan={2}
+              >
                 Constraint
               </th>
-              <th className="text-left py-1 pr-4">Group By</th>
+              <th className="text-left py-1 pr-4 text-muted-foreground">
+                Group By
+              </th>
               {showAggregation && (
-                <th className="text-left py-1 pr-4 w-[160px]">
+                <th className="text-left py-1 pr-4 w-[160px] text-muted-foreground">
                   {" "}
                   {/* Do not change this */}
                   <div className="flex items-center">
@@ -267,7 +276,7 @@ export function TableCustomizationPanel({
                   </div>
                 </th>
               )}
-              <th className="text-left py-1 pr-4 text-center">
+              <th className="text-left py-1 pr-4 text-center text-muted-foreground">
                 <span title="Order By">Order</span>
               </th>
               <th className="text-left py-1 pr-4 w-8"></th>
@@ -275,10 +284,15 @@ export function TableCustomizationPanel({
           </thead>
           <tbody>
             {columns.map((column) => (
-              <tr key={column.id} className="border-b border-muted/30">
+              <tr
+                key={column.id}
+                className="border-b border-white/10 hover:bg-white/5 transition-all-smooth"
+              >
                 <td className="py-1 px-2 w-[140px]">
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs font-medium">{column.name}</span>
+                    <span className="text-xs font-medium gradient-text">
+                      {column.name}
+                    </span>
                     <div className="flex flex-col">
                       <input
                         type="text"
@@ -287,14 +301,14 @@ export function TableCustomizationPanel({
                           handleAliASChange(column.id, e.target.value)
                         }
                         placeholder="AS..."
-                        className={`bg-transparent border ${
+                        className={`glass-input px-1 py-0.5 text-xs w-full transition-all-smooth ${
                           aliasErrors[column.id]
-                            ? "border-red-500"
-                            : "border-input"
-                        } rounded px-1 py-0.5 text-xs w-full`}
+                            ? "border-red-500 focus:ring-red-500"
+                            : "focus:ring-primary"
+                        }`}
                       />
                       {aliasErrors[column.id] && (
-                        <span className="text-xs text-red-500 mt-0.5">
+                        <span className="text-xs text-red-400 mt-0.5">
                           Invalid format
                         </span>
                       )}
@@ -308,7 +322,7 @@ export function TableCustomizationPanel({
                 </td>
                 <td className="py-1 px-2 w-[100px]">
                   <select
-                    className="bg-transparent border border-input rounded px-1 py-0.5 text-xs w-full"
+                    className="glass-input px-1 py-0.5 text-xs w-full transition-all-smooth focus:ring-primary"
                     value={column.constraint.operator}
                     onChange={(e) =>
                       handleConstraintOperatorChange(column.id, e.target.value)
@@ -329,7 +343,7 @@ export function TableCustomizationPanel({
                 <td className="py-1 px-2 w-[200px]">
                   <input
                     type="text"
-                    className="bg-transparent border border-input rounded px-1 py-0.5 text-xs w-full"
+                    className="glass-input px-1 py-0.5 text-xs w-full transition-all-smooth focus:ring-primary"
                     placeholder="Value"
                     value={column.constraint.value}
                     onChange={(e) =>
@@ -341,7 +355,7 @@ export function TableCustomizationPanel({
                 <td className="py-1 px-2 w-[60px] text-center">
                   <input
                     type="checkbox"
-                    className="form-checkbox h-3 w-3"
+                    className="form-checkbox h-3 w-3 accent-primary"
                     checked={column.groupBy}
                     onChange={(e) =>
                       handleGroupByChange(column.id, e.target.checked)
@@ -351,7 +365,7 @@ export function TableCustomizationPanel({
                 {showAggregation && (
                   <td className="py-1 px-2 w-[160px]">
                     <select
-                      className="bg-transparent border border-input rounded px-1 py-0.5 text-xs w-full"
+                      className="glass-input px-1 py-0.5 text-xs w-full transition-all-smooth focus:ring-primary"
                       value={column.aggregate}
                       onChange={(e) =>
                         handleAggregateChange(column.id, e.target.value)
@@ -379,7 +393,7 @@ export function TableCustomizationPanel({
                         ? "Sort ASCending"
                         : "Sort DESCending"
                     }
-                    className="h-6 w-6 p-0"
+                    className="h-6 w-6 p-0 hover:bg-primary/20 transition-all-smooth"
                   >
                     {column.orderBy === "NONE" && <MinusIcon size={14} />}
                     {column.orderBy === "ASC" && (
@@ -395,7 +409,7 @@ export function TableCustomizationPanel({
                     variant="ghost"
                     size="sm"
                     onClick={() => removeColumn(column.id)}
-                    className="h-5 w-5 p-0 text-muted-foreground hover:text-destructive"
+                    className="h-5 w-5 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/20 transition-all-smooth"
                   >
                     <Trash2Icon size={12} />
                   </Button>
@@ -413,7 +427,7 @@ export function TableCustomizationPanel({
             size="sm"
             onClick={() => setShowAddDropdown(!showAddDropdown)}
             disabled={availableColumns.length === 0}
-            className={`text-xs flex items-center gap-1 h-6 ${
+            className={`text-xs flex items-center gap-1 h-6 glass hover:bg-primary/20 hover-glow transition-all-smooth ${
               availableColumns.length === 0
                 ? "opacity-50 cursor-not-allowed"
                 : ""
@@ -423,11 +437,11 @@ export function TableCustomizationPanel({
           </Button>
 
           {showAddDropdown && availableColumns.length > 0 && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-background shadow-lg rounded-md border border-border z-50 max-h-48 overflow-y-auto">
+            <div className="absolute right-0 top-full mt-1 w-48 glass shadow-lg rounded-md border border-white/10 z-50 max-h-48 overflow-y-auto animate-slide-up">
               {availableColumns.map((col) => (
                 <div
                   key={col.name}
-                  className="px-3 py-2 text-xs hover:bg-accent cursor-pointer flex justify-between items-center"
+                  className="px-3 py-2 text-xs hover:bg-white/10 cursor-pointer flex justify-between items-center transition-all-smooth"
                   onClick={() => addSpecificColumn(col.name, col.type)}
                 >
                   <span className="font-medium">{col.name}</span>

@@ -189,15 +189,18 @@ export function StudioCanvas({
 
       setConsoleOutput(output.table);
       setQueryOutput(output.table.query);
-
     } catch (error: any) {
       setConsoleOutput({
         columns: [],
         rows: [],
-        query: ""
+        query: "",
       });
 
-      setQueryOutput(`--Error: ${error.message || "An error occurred while running the query"}`);
+      setQueryOutput(
+        `--Error: ${
+          error.message || "An error occurred while running the query"
+        }`
+      );
     }
   };
 
@@ -285,7 +288,7 @@ export function StudioCanvas({
 
   return (
     <div
-      className="flex-1 bg-studio p-6 h-full overflow-auto relative flex flex-col"
+      className="flex-1 p-6 h-full overflow-auto relative flex flex-col"
       style={{ zIndex: 1 }}
     >
       {/* Full-height container div to push the button to the bottom */}
@@ -311,7 +314,7 @@ export function StudioCanvas({
 
         {/* Display global state of group by - for debugging */}
         {droppedTables.length > 0 && (
-          <div className="mb-4 px-2 py-1 bg-muted/20 rounded text-xs">
+          <div className="mb-4 px-2 py-1 glass rounded text-xs animate-slide-up">
             <p className="text-muted-foreground">
               {anyTableHasGroupBy
                 ? "Aggregation functions available (Group By is active)"
@@ -325,13 +328,13 @@ export function StudioCanvas({
           ref={setNodeRef}
           className={`flex-grow flex flex-col items-center justify-center p-4 border-2 ${
             isOver
-              ? "border-primary border-dashed bg-primary-foreground/10"
-              : "border-ring border-dashed"
-          } rounded-lg transition-colors duration-200`}
+              ? "border-primary border-dashed bg-primary/10 animate-glow"
+              : "border-white/20 border-dashed"
+          } rounded-lg transition-all-smooth glass`}
         >
           {isOver ? (
             <div className="text-center p-4">
-              <p className="text-lg font-medium">
+              <p className="text-lg font-medium gradient-text animate-pulse-slow">
                 Drop here to add to your query
               </p>
             </div>
@@ -352,13 +355,15 @@ export function StudioCanvas({
         {/* Order By Priority Panel */}
         {orderByPriority.length > 1 && (
           <div className="mr-auto">
-            <div className="bg-muted/30 rounded-md p-2 max-w-md">
-              <h4 className="text-xs font-medium mb-1">Order By Priority</h4>
+            <div className="glass rounded-md p-2 max-w-md animate-float">
+              <h4 className="text-xs font-medium mb-1 gradient-text">
+                Order By Priority
+              </h4>
               <div className="space-y-1">
                 {orderByPriority.map((item, index) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-1 bg-background/60 rounded p-1 text-xs"
+                    className="flex items-center gap-1 glass rounded p-1 text-xs hover:bg-white/10 transition-all-smooth"
                   >
                     <span className="text-muted-foreground">{index + 1}.</span>
                     <span className="font-medium">
@@ -373,7 +378,7 @@ export function StudioCanvas({
                         size="sm"
                         onClick={() => moveOrderByItemUp(index)}
                         disabled={index === 0}
-                        className="h-5 w-5 p-0"
+                        className="h-5 w-5 p-0 hover:bg-white/10"
                         title="Move up in priority"
                       >
                         <ArrowUpIcon size={12} />
@@ -383,7 +388,7 @@ export function StudioCanvas({
                         size="sm"
                         onClick={() => moveOrderByItemDown(index)}
                         disabled={index === orderByPriority.length - 1}
-                        className="h-5 w-5 p-0"
+                        className="h-5 w-5 p-0 hover:bg-white/10"
                         title="Move down in priority"
                       >
                         <ArrowDownIcon size={12} />
@@ -409,7 +414,7 @@ export function StudioCanvas({
             id="query-limit"
             type="number"
             min="1"
-            className="w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-20 px-2 py-1 text-sm glass-input rounded focus:outline-none focus:ring-1 focus:ring-primary transition-all-smooth"
             placeholder="None"
             value={queryLimit || ""}
             onChange={handleLimitChange}
@@ -417,8 +422,7 @@ export function StudioCanvas({
           />
         </div>
         <Button
-          variant="secondary"
-          className="cursor-pointer"
+          className="gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth cursor-pointer"
           onClick={handleRunVisualQuery}
         >
           Run Query

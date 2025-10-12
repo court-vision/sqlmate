@@ -61,27 +61,41 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col h-screen w-full">
       <Header />
-      <div className="max-w-md mx-auto p-6 space-y-6 bg-card rounded-lg shadow mt-10">
-        <h1 className="text-2xl font-semibold">Profile</h1>
-        <div className="space-y-2">
-          <p>
-            <strong>Username:</strong> {user.username}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
+      <div className="max-w-md mx-auto p-6 space-y-6 glass-card hover-lift transition-all-smooth mt-10 animate-slide-up">
+        <h1 className="text-2xl font-semibold gradient-text">Profile</h1>
+        <div className="space-y-4 p-4 glass rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="font-medium">{user.username}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
         </div>
         <div className="flex flex-col space-y-4 pt-4">
-          <Button variant="destructive" onClick={logout}>
+          <Button
+            variant="destructive"
+            onClick={logout}
+            className="glass hover:bg-red-500/20 hover-glow transition-all-smooth"
+          >
             Logout
           </Button>
           <Button
             variant="outline"
-            className="border-red-300 text-red-500 hover:bg-red-50 hover:text-red-600"
+            className="glass border-red-400/50 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover-glow transition-all-smooth"
             onClick={() => setShowDeleteConfirmation(true)}
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete Account"}
+            {isDeleting ? (
+              <div className="flex items-center gap-2">
+                <div className="spinner-gradient w-4 h-4"></div>
+                Deleting...
+              </div>
+            ) : (
+              "Delete Account"
+            )}
           </Button>
         </div>
 
@@ -89,19 +103,23 @@ export default function ProfilePage() {
           open={showDeleteConfirmation}
           onOpenChange={setShowDeleteConfirmation}
         >
-          <AlertDialogContent>
+          <AlertDialogContent className="glass-panel">
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogTitle className="gradient-text">
+                Are you absolutely sure?
+              </AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete your
                 account and all data associated with it.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="glass hover:bg-white/10 transition-all-smooth">
+                Cancel
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteAccount}
-                className="bg-red-500 hover:bg-red-600"
+                className="gradient-accent hover:shadow-lg hover:scale-105 transition-all-smooth"
               >
                 Delete Account
               </AlertDialogAction>

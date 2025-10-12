@@ -43,15 +43,11 @@ export default function EditTablePage() {
     try {
       const data = await tableService.getTableData(tableName);
       setTableData(data.table!!);
-
     } catch (err: any) {
-      
       setError(err.message || "Failed to fetch table data");
 
       // Handle unauthorized errors
-      if (
-        err.message.includes("UNAUTHORIZED")
-      ) {
+      if (err.message.includes("UNAUTHORIZED")) {
         router.push("/login");
         return;
       }
@@ -77,7 +73,9 @@ export default function EditTablePage() {
       };
 
       // Send the update request to the backend
-      const result = await queryService.updateTable({ query_params: updateData });
+      const result = await queryService.updateTable({
+        query_params: updateData,
+      });
 
       setUpdateResult({
         success: result.status.status === "success",
@@ -123,17 +121,19 @@ export default function EditTablePage() {
         <div className="flex items-center mb-6">
           <Button
             variant="ghost"
-            className="mr-4"
+            className="mr-4 glass hover:bg-white/10 transition-all-smooth"
             onClick={() => router.back()}
           >
             <ArrowLeft size={16} className="mr-2" />
             Back
           </Button>
-          <h1 className="text-2xl font-bold">Edit Table: {tableName}</h1>
+          <h1 className="text-2xl font-bold gradient-text">
+            Edit Table: {tableName}
+          </h1>
 
           <Button
             variant="outline"
-            className="ml-auto"
+            className="ml-auto glass hover:bg-white/10 hover-glow transition-all-smooth"
             onClick={fetchTableData}
             disabled={isLoading}
           >
@@ -146,7 +146,7 @@ export default function EditTablePage() {
         </div>
 
         {error && (
-          <Card className="p-4 mb-6 bg-red-50 border-red-200 text-red-700">
+          <Card className="p-4 mb-6 glass border border-red-400/50 text-red-400 animate-slide-up">
             <div className="flex items-center">
               <AlertCircle size={16} className="mr-2" />
               <p>{error}</p>
@@ -155,7 +155,7 @@ export default function EditTablePage() {
         )}
 
         {updateResult && updateResult.success && (
-          <Card className="p-4 mb-6 bg-green-50 border-green-200 text-green-700">
+          <Card className="p-4 mb-6 glass border border-green-400/50 text-green-400 animate-slide-up">
             <div className="flex items-center">
               <CheckCircle size={16} className="mr-2" />
               <p>
@@ -180,11 +180,11 @@ export default function EditTablePage() {
 
         {isLoading ? (
           <div className="flex justify-center items-center p-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="spinner-gradient h-12 w-12"></div>
           </div>
         ) : (
           <div className="space-y-6">
-            <Card className="p-6">
+            <Card className="p-6 glass hover-lift transition-all-smooth animate-slide-up">
               {tableData ? (
                 <QueryResultTable data={tableData} />
               ) : (
