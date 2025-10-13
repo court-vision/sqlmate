@@ -282,13 +282,8 @@ def get_table_data(table_name: str, response: Response, authorization: Optional[
 			)
 		)
 	
-	# Convert SQLAlchemy Row objects to a list of dictionaries
-	data = []
-	for row in rows:
-		data.append(dict(row))
-	
-	# Convert the rows to the expected format for query_output_to_table
-	formatted_rows = [tuple(v for v in row.values()) for row in data]
+	# Convert SQLAlchemy Row objects directly to tuples for query_output_to_table
+	formatted_rows = [tuple(row) for row in rows]
 	
 	table = query_output_to_table(formatted_rows, column_names, query, 1)
 	table.created_at = get_timestamp()
@@ -347,9 +342,9 @@ def update(req: UpdateTableRequest, response: Response, authorization: Optional[
 	
 	try:
 		with session_scope("sqlmate") as session:
-			session.execute(text(query_body))
-			# For SQLAlchemy, we can get affected rows this way
-			rows_affected = session.execute(text("SELECT ROW_COUNT()")).scalar() or 0
+			result = session.execute(text(query_body))
+			# Get the number of affected rows from the result
+			rows_affected = result.rowcount
 	except mysql.connector.Error as e:
 		print(e)
 		return UpdateTableResponse(

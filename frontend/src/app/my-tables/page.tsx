@@ -272,7 +272,7 @@ export default function MyTablesPage() {
                       {table.table_name}
                     </td>
                     <td className="py-3 px-4 text-muted-foreground">
-                      {formatDistanceToNow(new Date(table.created_at), {
+                      {formatDistanceToNow(new Date(table.created_at + "Z"), {
                         addSuffix: true,
                       })}
                     </td>

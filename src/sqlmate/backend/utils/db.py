@@ -13,15 +13,13 @@ from sqlmate.backend.utils.constants import DB_HOST, DB_USER, DB_PASS, DB_NAME, 
 
 def get_timestamp() -> str:
     """
-    Get current timestamp in formatted string.
+    Get current timestamp in formatted string (UTC).
     
     Returns:
-        Formatted timestamp string
+        Formatted timestamp string in UTC
     """
     current_time_utc = datetime.now(pytz.utc)
-    # Adjust for timezone if needed (assuming UTC-4)
-    current_time_adjusted = current_time_utc - timedelta(hours=4)
-    formatted_time = current_time_adjusted.strftime("%Y-%m-%d %H:%M:%S")
+    formatted_time = current_time_utc.strftime("%Y-%m-%d %H:%M:%S")
     return formatted_time
 
 db_config = {
