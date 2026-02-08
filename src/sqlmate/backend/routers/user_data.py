@@ -2,8 +2,10 @@ from sqlmate.backend.utils.serialization import query_output_to_table
 from sqlmate.backend.utils.auth import check_user
 from sqlmate.backend.utils.generators import generate_update_query
 from sqlmate.backend.utils.db import get_timestamp, session_scope
+from sqlmate.backend.utils.user_tables import save_user_table, drop_user_tables
 from sqlmate.backend.classes.http import StatusResponse, Table, UpdateQueryParams
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlmate.backend.classes.queries.update import UpdateQuery
 from sqlmate.backend.classes.metadata import metadata
 
@@ -11,7 +13,6 @@ from sqlmate.backend.classes.metadata import metadata
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Header, status, Response
 from pydantic import BaseModel
-import mysql.connector
 
 router = APIRouter()
 
@@ -46,39 +47,33 @@ def save_table(req: SaveTableRequest, response: Response, authorization: Optiona
 				message="Missing table name or query"
 			)
 		)
-	
-	
-	# Execute the stored procedure to create the table (this checks if the table already exists as well)
+
 	created_at = get_timestamp()
-	with session_scope("user") as session:
-		try:
-			session.execute(
-				text("CALL save_user_table(:user_id, :username, :table_name, :created_at, :query)"),
-				{"user_id": user_id, "username": username, "table_name": table_name, "created_at": created_at, "query": query}
+	try:
+		with session_scope("sqlmate") as session:
+			save_user_table(session, user_id, username, table_name, created_at, query)
+	except IntegrityError:
+		response.status_code = status.HTTP_409_CONFLICT
+		return SaveTableResponse(
+			details=StatusResponse(
+				status="warning",
+				message="Table already exists"
 			)
-		except mysql.connector.IntegrityError as e:
-			print(e)
-			response.status_code = status.HTTP_409_CONFLICT
-			return SaveTableResponse(
-				details=StatusResponse(
-					status="warning",
-					message="Table already exists"
-				)
+		)
+	except (SQLAlchemyError, ValueError) as e:
+		print(e)
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return SaveTableResponse(
+			details=StatusResponse(
+				status="error",
+				message="Failed to create table"
 			)
-		except mysql.connector.Error as e:
-			print(e)
-			response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-			return SaveTableResponse(
-				details=StatusResponse(
-					status="error",
-					message="Failed to create table"
-				)
-			)
-		
+		)
+
 	# After we save the table, we need to update metadata to include the new table
 	full_table_name = f"u_{username}_{table_name}"
 	metadata.add_table(full_table_name)
-		
+
 	return SaveTableResponse(
 		details=StatusResponse(
 			status="success",
@@ -94,7 +89,7 @@ class DeleteTableResponse(BaseModel):
 @router.post("/delete_table", response_model=DeleteTableResponse, status_code=status.HTTP_200_OK)
 def drop_table(req: DeleteTableRequest, response: Response, authorization: Optional[str] = Header(None)):
 	# Check the authentication of the user
-	user_id, _, error = check_user(authorization)
+	user_id, username, error = check_user(authorization)
 	if error:
 		response.status_code = status.HTTP_401_UNAUTHORIZED
 		return DeleteTableResponse(
@@ -118,7 +113,7 @@ def drop_table(req: DeleteTableRequest, response: Response, authorization: Optio
 				message="Invalid table names format"
 			)
 		)
-	
+
 	if not table_names:
 		response.status_code = status.HTTP_400_BAD_REQUEST
 		return DeleteTableResponse(
@@ -127,53 +122,26 @@ def drop_table(req: DeleteTableRequest, response: Response, authorization: Optio
 				message="No table names provided"
 			)
 		)
-	
-	# Execute the query to delete the entries from the user_tables table, which triggers insertion into tables_to_drop
-	with session_scope("sqlmate") as session:
-		try:
-			for table_name in table_names:
-				if not table_name:
-					response.status_code = status.HTTP_400_BAD_REQUEST
-					return DeleteTableResponse(
-						details=StatusResponse(
-							status="error",
-							message="Invalid table name"
-						)
-					)
-				session.execute(
-					text("DELETE FROM user_tables WHERE user_id = :user_id AND table_name = :table_name"), 
-					{"user_id": user_id, "table_name": table_name}
-				)
-		except mysql.connector.Error as e:
-			print(e)
-			response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-			return DeleteTableResponse(
-				details=StatusResponse(
-					status="error",
-					message="Failed to drop table"
-				)
+
+	try:
+		with session_scope("sqlmate") as session:
+			dropped = drop_user_tables(session, user_id, username, table_names)
+	except SQLAlchemyError as e:
+		print(e)
+		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+		return DeleteTableResponse(
+			details=StatusResponse(
+				status="error",
+				message="Failed to drop table"
 			)
-	
-	# Execute the stored procedure to drop the tables that were marked for deletion in the previous step
-	with session_scope("sqlmate") as session:
-		try:
-			session.execute(text("CALL process_tables_to_drop()"))
-		except mysql.connector.Error as e:
-			print(e)
-			response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-			return DeleteTableResponse(
-				details=StatusResponse(
-					status="error",
-					message="Failed to drop table"
-				)
-			)
-	
+		)
+
 	return DeleteTableResponse(
 		details=StatusResponse(
 			status="success",
 			message="Table(s) dropped successfully"
 		),
-		deleted_tables=list(map(str, table_names))
+		deleted_tables=dropped
 	)
 
 class GetTablesReponse(BaseModel):
@@ -196,11 +164,11 @@ def get_tables(response: Response, authorization: Optional[str] = Header(None)) 
 	with session_scope("sqlmate") as session:
 		try:
 			result = session.execute(
-				text("SELECT table_name, created_at FROM user_tables WHERE user_id = :user_id"), 
+				text("SELECT table_name, created_at FROM user_tables WHERE user_id = :user_id"),
 				{"user_id": user_id}
 			)
 			rows = result.fetchall()
-		except mysql.connector.Error as e:
+		except SQLAlchemyError as e:
 			print(e)
 			return GetTablesReponse(
 				details=StatusResponse(
@@ -215,7 +183,7 @@ def get_tables(response: Response, authorization: Optional[str] = Header(None)) 
 				message="No tables found"
 			)
 		)
-	
+
 	tables: List[Dict[str, Any]] = [{"table_name": row.table_name, "created_at": row.created_at} for row in rows]
 	return GetTablesReponse(
 		details=StatusResponse(
@@ -240,7 +208,7 @@ def get_table_data(table_name: str, response: Response, authorization: Optional[
 				message=error
 			)
 		)
-	
+
 	if not table_name:
 		response.status_code = status.HTTP_400_BAD_REQUEST
 		return GetTableDataResponse(
@@ -249,7 +217,7 @@ def get_table_data(table_name: str, response: Response, authorization: Optional[
 				message="Missing table name"
 			)
 		)
-	
+
 	formatted_table_name = f"u_{username}_{table_name}"
 	query = f"SELECT * FROM {formatted_table_name};"
 	with session_scope("sqlmate") as session:
@@ -264,7 +232,7 @@ def get_table_data(table_name: str, response: Response, authorization: Optional[
 					)
 				)
 			column_names = list(result.keys())
-		except mysql.connector.Error as e:
+		except SQLAlchemyError as e:
 			print(e)
 			response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 			return GetTableDataResponse(
@@ -281,10 +249,10 @@ def get_table_data(table_name: str, response: Response, authorization: Optional[
 				message="No data found"
 			)
 		)
-	
+
 	# Convert SQLAlchemy Row objects directly to tuples for query_output_to_table
 	formatted_rows = [tuple(row) for row in rows]
-	
+
 	table = query_output_to_table(formatted_rows, column_names, query, 1)
 	table.created_at = get_timestamp()
 	return GetTableDataResponse(
@@ -312,7 +280,7 @@ def update(req: UpdateTableRequest, response: Response, authorization: Optional[
 				message="UNAUTHORIZED:" + error
 			)
 		)
-	
+
 	print(f"User {username} is updating a table with query: {req.query_params}")
 
 	# Validate the input data
@@ -329,8 +297,6 @@ def update(req: UpdateTableRequest, response: Response, authorization: Optional[
 
 
 	query_body = generate_update_query(query)
-	# with open("logs/update_log.txt", "w") as f:
-	#     f.write(query_body)
 
 	if not query_body:
 		return UpdateTableResponse(
@@ -339,13 +305,13 @@ def update(req: UpdateTableRequest, response: Response, authorization: Optional[
 				message="Invalid query"
 			)
 		)
-	
+
 	try:
 		with session_scope("sqlmate") as session:
 			result = session.execute(text(query_body))
 			# Get the number of affected rows from the result
 			rows_affected = result.rowcount
-	except mysql.connector.Error as e:
+	except SQLAlchemyError as e:
 		print(e)
 		return UpdateTableResponse(
 			status=StatusResponse(

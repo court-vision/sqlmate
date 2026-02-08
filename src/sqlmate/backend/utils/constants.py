@@ -26,3 +26,4 @@ DB_PASS = os.getenv("DB_PASS")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = os.getenv("DB_PORT")
 DB_TYPE = os.getenv("DB_TYPE", "mysql")  # Default to mysql if not specified
+DB_SCHEMA = os.getenv("DB_SCHEMA", "public")  # PostgreSQL schema to search for tables

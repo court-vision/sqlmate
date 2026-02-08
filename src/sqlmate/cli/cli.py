@@ -33,19 +33,23 @@ def init():
 
 def cleanup():
     print("🧹 Cleaning up SQLMate project...")
-    
+
     credentials = load_config()
-    credentials["DB_TYPE"] = "mysql"  # Specify database type for SQLAlchemy
+    if not credentials:
+        return
+
     db = SQLAlchemyDB(credentials)
     if not db.engine:
         print("❌ Failed to connect to the database for cleanup.")
         return
-    
-    # Remove the procedure in the user's source database and then the sqlmate database
-    queries = [
-        f"DROP PROCEDURE IF EXISTS {credentials['DB_NAME']}.save_user_table",
-        "DROP DATABASE IF EXISTS sqlmate"
-    ]
+
+    db_type = credentials.get("DB_TYPE", "mysql")
+    is_postgres = db_type in ("postgresql", "postgres")
+
+    if is_postgres:
+        queries = ["DROP SCHEMA IF EXISTS sqlmate CASCADE"]
+    else:
+        queries = ["DROP DATABASE IF EXISTS sqlmate"]
 
     try:
         success = db.execute_many(queries, err_msg="Error during cleanup")
@@ -97,7 +101,7 @@ def main():
 
     subparsers.add_parser("init", help="Initialize the project")
     subparsers.add_parser("run", help="Run the Docker app")
-    subparsers.add_parser("cleanup", help="Cleanup SQLMate project (removes procedures, triggers and database)")
+    subparsers.add_parser("cleanup", help="Cleanup SQLMate project (removes sqlmate database/schema)")
 
     args = parser.parse_args()
     if args.command == "init":

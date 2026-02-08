@@ -26,12 +26,11 @@ src/sqlmate/backend/utils/db.py
 src/sqlmate/backend/utils/error.py
 src/sqlmate/backend/utils/generators.py
 src/sqlmate/backend/utils/serialization.py
+src/sqlmate/backend/utils/user_tables.py
 src/sqlmate/cli/__init__.py
 src/sqlmate/cli/__main__.py
 src/sqlmate/cli/cli.py
 src/sqlmate/cli/setup/db_setup.py
 src/sqlmate/cli/setup/env_setup.py
 src/sqlmate/cli/setup/sql/database.py
-src/sqlmate/cli/setup/sql/procedures.py
 src/sqlmate/cli/setup/sql/tables.py
-src/sqlmate/cli/setup/sql/triggers.py

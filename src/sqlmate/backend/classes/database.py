@@ -16,7 +16,7 @@ class SQLAlchemyDB:
     def __init__(self, credentials: dict):
         """
         Initialize the database connection with the given credentials.
-        
+
         Args:
             credentials: Dictionary containing connection parameters
                 - DB_HOST: Database host (default: "localhost")
@@ -24,7 +24,8 @@ class SQLAlchemyDB:
                 - DB_PASS: Database password (default: "")
                 - DB_NAME: Database name (default: "")
                 - DB_PORT: Database port (optional)
-                - DB_TYPE: Database type ("mysql", "postgresql", etc.) (default: "mysql")
+                - DB_TYPE: Database type ("mysql", "postgres") (default: "mysql")
+                - SEARCH_PATH: PostgreSQL search_path (optional, e.g. "sqlmate,public")
         """
         self.host = credentials.get("DB_HOST", "")
         self.user = credentials.get("DB_USER", "root")
@@ -32,27 +33,35 @@ class SQLAlchemyDB:
         self.database = credentials.get("DB_NAME", "")
         self.port = credentials.get("DB_PORT", "")
         self.db_type = credentials.get("DB_TYPE", "mysql")
-        
+        self.db_schema = credentials.get("DB_SCHEMA", "public")
+        search_path = credentials.get("SEARCH_PATH", "")
+
+        port_str = f":{self.port}" if self.port else ""
+
         # Set up the connection string based on the database type
         if self.db_type == "mysql":
-            port_str = f":{self.port}" if self.port else ""
             conn_string = f"mysql+mysqlconnector://{self.user}:{self.password}@{self.host}{port_str}/{self.database}"
         elif self.db_type in ("postgresql", "postgres"):
-            port_str = f":{self.port}" if self.port else ""
             conn_string = f"postgresql+psycopg2://{self.user}:{self.password}@{self.host}{port_str}/{self.database}"
         else:
             raise Error(f"Unsupported database type: {self.db_type}")
-        
-        # Create engine with connection pooling
-        self.engine = create_engine(
-            conn_string, 
+
+        # Build engine kwargs
+        engine_kwargs = dict(
             poolclass=QueuePool,
-            pool_pre_ping=True,  # Check connection validity before use
+            pool_pre_ping=True,
             pool_size=5,
             max_overflow=10,
             pool_timeout=30,
-            pool_recycle=1800  # Recycle connections after 30 minutes
+            pool_recycle=1800,
         )
+
+        # For PostgreSQL with a custom search_path, set it at connection level
+        if search_path and self.db_type in ("postgresql", "postgres"):
+            engine_kwargs["connect_args"] = {"options": f"-c search_path={search_path}"}
+
+        # Create engine with connection pooling
+        self.engine = create_engine(conn_string, **engine_kwargs)
     
     def close(self) -> None:
         """Close the database connection pool."""
@@ -162,13 +171,12 @@ class SQLAlchemyDB:
         # For SQLAlchemy, we need to use appropriate drivers
         # We will need to use the sync API here as we're creating a temp engine
         # for database existence check
+        port_str = f":{self.port}" if self.port else ""
         if self.db_type == "mysql":
-            # Using aiomysql driver for MySQL operations
-            temp_conn_string = f"mysql+aiomysql://{self.user}:{self.password}@{self.host}"
+            temp_conn_string = f"mysql+mysqlconnector://{self.user}:{self.password}@{self.host}{port_str}"
             query = f"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '{self.database}'"
         elif self.db_type in ("postgresql", "postgres"):
-            # Using asyncpg driver for PostgreSQL operations
-            temp_conn_string = f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}/postgres"
+            temp_conn_string = f"postgresql+psycopg2://{self.user}:{self.password}@{self.host}{port_str}/postgres"
             query = f"SELECT 1 FROM pg_database WHERE datname = '{self.database}'"
         else:
             self._raise_err(f"Unsupported database type: {self.db_type}")
@@ -190,7 +198,7 @@ class SQLAlchemyDB:
             if 'temp_engine' in locals():
                 temp_engine.dispose()
     
-    def fetch_metadata(self) -> Dict:
+    def fetch_metadata(self) -> Dict | None:
         """
         Fetch database schema metadata.
         
@@ -211,34 +219,55 @@ class SQLAlchemyDB:
                 # Get all table names first
                 if self.db_type == "mysql":
                     query = text("SHOW TABLES")
+                    result = conn.execute(query)
+                    tables = result.fetchall()
+                    # Each row is (table_name,)
+                    table_entries = [(t[0], None) for t in tables if not str(t[0]).startswith('u_')]
                 elif self.db_type in ("postgresql", "postgres"):
-                    query = text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'")
+                    if self.db_schema == "*":
+                        # Discover tables across all non-system schemas
+                        query = text("""
+                            SELECT tablename, schemaname
+                            FROM pg_catalog.pg_tables
+                            WHERE schemaname NOT IN ('pg_catalog', 'information_schema', 'sqlmate')
+                        """)
+                        result = conn.execute(query)
+                    else:
+                        query = text("""
+                            SELECT tablename, schemaname
+                            FROM pg_catalog.pg_tables
+                            WHERE schemaname = :schema
+                        """)
+                        result = conn.execute(query, {"schema": self.db_schema})
+                    tables = result.fetchall()
+                    table_entries = [(t[0], t[1]) for t in tables if not str(t[0]).startswith('u_')]
                 else:
                     self._raise_err(f"Unsupported database type: {self.db_type}")
                     return {}
-                
-                result = conn.execute(query)
-                tables = result.fetchall()
-                
-                # Filter out tables that start with 'u_'
-                table_names = [t[0] for t in tables if not str(t[0]).startswith('u_')]
-                
+
                 # Get column information for each table
-                for table_name in table_names:
+                for table_name, schema_name in table_entries:
                     if self.db_type == "mysql":
                         col_query = text(f"SHOW COLUMNS FROM {table_name}")
+                        col_result = conn.execute(col_query)
                     elif self.db_type in ("postgresql", "postgres"):
-                        col_query = text(f"""
-                            SELECT column_name, data_type 
-                            FROM information_schema.columns 
-                            WHERE table_name = '{table_name}' 
-                            AND table_schema = 'public'
+                        col_query = text("""
+                            SELECT column_name, data_type
+                            FROM information_schema.columns
+                            WHERE table_name = :table
+                            AND table_schema = :schema
                         """)
-                    
-                    col_result = conn.execute(col_query)
+                        col_result = conn.execute(col_query, {"table": table_name, "schema": schema_name})
+
                     columns = col_result.fetchall()
-                    
-                    result_dict[table_name] = [
+
+                    # Use schema-qualified name for non-public PostgreSQL schemas
+                    if self.db_type in ("postgresql", "postgres") and schema_name != "public":
+                        display_name = f"{schema_name}.{table_name}"
+                    else:
+                        display_name = table_name
+
+                    result_dict[display_name] = [
                         {
                             "column": col[0],
                             "data_type": str(col[1])
@@ -249,7 +278,7 @@ class SQLAlchemyDB:
             return result_dict
         except SQLAlchemyError as err:
             self._raise_err(f"Error fetching schema: {err}")
-            return {}
+            return None
     
     def _raise_err(self, message: str) -> None:
         """

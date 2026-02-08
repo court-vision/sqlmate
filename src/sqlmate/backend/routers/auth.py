@@ -1,12 +1,13 @@
 from sqlmate.backend.utils.auth import create_access_token, check_user, hash_password, check_password, get_token
 from sqlmate.backend.utils.db import session_scope
+from sqlmate.backend.utils.user_tables import drop_all_user_tables
 from sqlmate.backend.classes.http import StatusResponse
 
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from typing import Any, Optional
 from fastapi import APIRouter, Header, Response, status
 from pydantic import BaseModel
-import mysql.connector
 
 router = APIRouter()
 
@@ -34,9 +35,9 @@ def register(req: RegisterRequest, response: Response) -> RegisterResponse:
                 text("INSERT INTO users (username, password, email) VALUES (:username, :password, :email)"),
                 {"username": username, "password": pw_hash, "email": email}
             )
-            
+
     # If insertion fails due to duplicate username, or other error, return error
-    except mysql.connector.IntegrityError as _:
+    except IntegrityError:
         response.status_code = status.HTTP_409_CONFLICT
         return RegisterResponse(
 			details=StatusResponse(
@@ -45,8 +46,8 @@ def register(req: RegisterRequest, response: Response) -> RegisterResponse:
                 code=status.HTTP_409_CONFLICT
 			)
 		)
-    
-    except mysql.connector.Error as e:
+
+    except SQLAlchemyError as e:
         print(e)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return RegisterResponse(
@@ -56,7 +57,7 @@ def register(req: RegisterRequest, response: Response) -> RegisterResponse:
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR
 			)
 		)
-    
+
     return RegisterResponse(
 		details=StatusResponse(
 			status="success",
@@ -101,7 +102,7 @@ def login(req: LoginRequest, response: Response) -> LoginResponse:
                 code=status.HTTP_401_UNAUTHORIZED
 			)
 		)
-    
+
     # Generate JWT token with username
     payload = {
         "id": row[0],
@@ -187,31 +188,18 @@ def delete_account(authorization: Optional[str] = Header(None)) -> DeleteAccount
 			)
 		)
 
-    with session_scope("sqlmate") as session:
-        try:
-            session.execute(text("DELETE FROM users WHERE username = :username"), {"username": username})
-        except mysql.connector.Error as e:
-            print(e)
-            return DeleteAccountResponse(
-				details=StatusResponse(
-					status="error",
-					message="Failed to delete account"
-				)
+    try:
+        with session_scope("sqlmate") as session:
+            drop_all_user_tables(session, user_id, username)
+    except SQLAlchemyError as e:
+        print(e)
+        return DeleteAccountResponse(
+			details=StatusResponse(
+				status="error",
+				message="Failed to delete account"
 			)
-        
-    # Execute the stored procedure to drop the tables that were marked for deletion in the previous step
-    with session_scope("user") as session:
-        try:
-            session.execute(text("CALL process_tables_to_drop()"))
-        except mysql.connector.Error as e:
-            print(e)
-            return DeleteAccountResponse(
-				details=StatusResponse(
-					status="error",
-					message="Failed to process tables for deletion"
-				)
-			)
-    
+		)
+
     return DeleteAccountResponse(
 		details=StatusResponse(
 			status="success",

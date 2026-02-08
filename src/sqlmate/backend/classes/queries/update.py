@@ -27,7 +27,8 @@ class Update:
         self.value: str = self.process_value(input.get("value", ""))
 
     def process_value(self, value: Any) -> str:
-        table_name, attribute_name = self.attribute.split(".")
+        *table_parts, attribute_name = self.attribute.split(".")
+        table_name = ".".join(table_parts)
         db_type = metadata.get_type(table_name, attribute_name)
         print(table_name, attribute_name)
         print("DB_TYPE:", db_type)

@@ -2,7 +2,7 @@
 const nextConfig = {
   async rewrites() {
     // Get the API URL from environment variable, with a fallback for local development
-    const API_URL = "https://sqlmate-production.up.railway.app" || process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
+    const API_URL = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL;
 
     return [
       {

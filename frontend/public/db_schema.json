@@ -1,9 +1,13 @@
 [
   {
-    "table": "albums",
+    "table": "nba.players",
     "columns": [
       {
         "name": "id",
+        "type": "INT"
+      },
+      {
+        "name": "espn_id",
         "type": "INT"
       },
       {
@@ -11,130 +15,552 @@
         "type": "VARCHAR(255)"
       },
       {
-        "name": "release_date",
+        "name": "name_normalized",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "position",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.player_game_stats",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INT"
+      },
+      {
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "team_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "game_date",
         "type": "DATE"
       },
       {
-        "name": "image_url",
-        "type": "VARCHAR(100)"
+        "name": "fpts",
+        "type": "INT"
       },
       {
-        "name": "spotify_id",
-        "type": "VARCHAR(50)"
+        "name": "pts",
+        "type": "INT"
+      },
+      {
+        "name": "reb",
+        "type": "INT"
+      },
+      {
+        "name": "ast",
+        "type": "INT"
+      },
+      {
+        "name": "stl",
+        "type": "INT"
+      },
+      {
+        "name": "blk",
+        "type": "INT"
+      },
+      {
+        "name": "tov",
+        "type": "INT"
+      },
+      {
+        "name": "min",
+        "type": "INT"
+      },
+      {
+        "name": "fgm",
+        "type": "INT"
+      },
+      {
+        "name": "fga",
+        "type": "INT"
+      },
+      {
+        "name": "fg3m",
+        "type": "INT"
+      },
+      {
+        "name": "fg3a",
+        "type": "INT"
+      },
+      {
+        "name": "ftm",
+        "type": "INT"
+      },
+      {
+        "name": "fta",
+        "type": "INT"
+      },
+      {
+        "name": "pipeline_run_id",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
       }
     ]
   },
   {
-    "table": "artists",
+    "table": "nba.teams",
     "columns": [
       {
         "name": "id",
-        "type": "INT"
+        "type": "VARCHAR(255)"
       },
       {
         "name": "name",
         "type": "VARCHAR(255)"
       },
       {
-        "name": "genres",
-        "type": "VARCHAR(350)"
+        "name": "conference",
+        "type": "VARCHAR(255)"
       },
       {
-        "name": "spotify_id",
-        "type": "VARCHAR(50)"
+        "name": "division",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
       }
     ]
   },
   {
-    "table": "tracks",
+    "table": "nba.player_ownership",
     "columns": [
       {
         "name": "id",
         "type": "INT"
       },
       {
-        "name": "name",
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "snapshot_date",
+        "type": "DATE"
+      },
+      {
+        "name": "rost_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "pipeline_run_id",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.player_season_stats",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INT"
+      },
+      {
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "team_id",
         "type": "VARCHAR(255)"
       },
       {
-        "name": "album_id",
-        "type": "INT"
+        "name": "as_of_date",
+        "type": "DATE"
       },
       {
-        "name": "duration_ms",
-        "type": "INT"
-      },
-      {
-        "name": "preview_url",
+        "name": "season",
         "type": "VARCHAR(255)"
       },
       {
-        "name": "explicit",
-        "type": "TINYINT(1)"
-      },
-      {
-        "name": "popularity",
+        "name": "gp",
         "type": "INT"
       },
       {
-        "name": "danceability",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "energy",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "key",
+        "name": "fpts",
         "type": "INT"
       },
       {
-        "name": "loudness",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "mode",
+        "name": "pts",
         "type": "INT"
       },
       {
-        "name": "speechiness",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "acousticness",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "instrumentalness",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "liveness",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "valence",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "tempo",
-        "type": "DECIMAL(10,2)"
-      },
-      {
-        "name": "time_signature",
+        "name": "reb",
         "type": "INT"
       },
       {
-        "name": "isrc",
-        "type": "VARCHAR(50)"
+        "name": "ast",
+        "type": "INT"
       },
       {
-        "name": "label",
-        "type": "VARCHAR(100)"
+        "name": "stl",
+        "type": "INT"
       },
       {
-        "name": "spotify_id",
-        "type": "VARCHAR(50)"
+        "name": "blk",
+        "type": "INT"
+      },
+      {
+        "name": "tov",
+        "type": "INT"
+      },
+      {
+        "name": "min",
+        "type": "INT"
+      },
+      {
+        "name": "fgm",
+        "type": "INT"
+      },
+      {
+        "name": "fga",
+        "type": "INT"
+      },
+      {
+        "name": "fg3m",
+        "type": "INT"
+      },
+      {
+        "name": "fg3a",
+        "type": "INT"
+      },
+      {
+        "name": "ftm",
+        "type": "INT"
+      },
+      {
+        "name": "fta",
+        "type": "INT"
+      },
+      {
+        "name": "rank",
+        "type": "INT"
+      },
+      {
+        "name": "rost_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "pipeline_run_id",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.games",
+    "columns": [
+      {
+        "name": "game_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "game_date",
+        "type": "DATE"
+      },
+      {
+        "name": "season",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "home_team_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "away_team_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "home_score",
+        "type": "INT"
+      },
+      {
+        "name": "away_score",
+        "type": "INT"
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "arena",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "attendance",
+        "type": "INT"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.player_advanced_stats",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INT"
+      },
+      {
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "team_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "as_of_date",
+        "type": "DATE"
+      },
+      {
+        "name": "season",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "gp",
+        "type": "INT"
+      },
+      {
+        "name": "min",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "off_rating",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "def_rating",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "net_rating",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "ts_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "efg_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "usg_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "ast_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "ast_to_tov",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "ast_ratio",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "reb_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "oreb_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "dreb_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "tov_pct",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "pace",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "pie",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "poss",
+        "type": "INT"
+      },
+      {
+        "name": "plus_minus",
+        "type": "DECIMAL(10,2)"
+      },
+      {
+        "name": "pipeline_run_id",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.player_injuries",
+    "columns": [
+      {
+        "name": "id",
+        "type": "INT"
+      },
+      {
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "report_date",
+        "type": "DATE"
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "injury_type",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "injury_detail",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "expected_return",
+        "type": "DATE"
+      },
+      {
+        "name": "pipeline_run_id",
+        "type": "UUID"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+      }
+    ]
+  },
+  {
+    "table": "nba.player_profiles",
+    "columns": [
+      {
+        "name": "player_id",
+        "type": "INT"
+      },
+      {
+        "name": "first_name",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "last_name",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "birthdate",
+        "type": "DATE"
+      },
+      {
+        "name": "height",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "weight",
+        "type": "INT"
+      },
+      {
+        "name": "position",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "jersey_number",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "team_id",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "draft_year",
+        "type": "INT"
+      },
+      {
+        "name": "draft_round",
+        "type": "INT"
+      },
+      {
+        "name": "draft_number",
+        "type": "INT"
+      },
+      {
+        "name": "season_exp",
+        "type": "INT"
+      },
+      {
+        "name": "country",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "school",
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "from_year",
+        "type": "INT"
+      },
+      {
+        "name": "to_year",
+        "type": "INT"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
       }
     ]
   }

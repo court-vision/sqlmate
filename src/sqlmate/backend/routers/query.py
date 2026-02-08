@@ -5,10 +5,10 @@ from sqlmate.backend.utils.db import get_timestamp, session_scope
 from sqlmate.backend.classes.http import StatusResponse, Table, QueryParams
 from sqlmate.backend.classes.queries.base import BaseQuery
 
+from sqlalchemy.exc import SQLAlchemyError
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, status, Response
 from pydantic import BaseModel
-import mysql.connector
 
 router = APIRouter()
 
@@ -59,7 +59,7 @@ def run_query(req: QueryRequest, response: Response) -> QueryResponse:
 				)
 			column_names = list(result.keys())
 			rows: Any = result.fetchall()
-	except mysql.connector.Error as e:
+	except SQLAlchemyError as e:
 		print(e)
 		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 		return QueryResponse(
