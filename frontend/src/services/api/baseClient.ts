@@ -1,22 +1,38 @@
 // Base API client with common functionality
 export class BaseApiClient {
   protected baseUrl: string;
+  private static tokenGetter: (() => Promise<string | null>) | null = null;
 
   constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl;
   }
 
+  // Set a token getter function (called once from a React component with Clerk's getToken)
+  static setTokenGetter(getter: () => Promise<string | null>) {
+    BaseApiClient.tokenGetter = getter;
+  }
+
   // Get auth headers for protected endpoints
-  protected getAuthHeaders() {
-    const token = localStorage.getItem("token");
+  protected async getAuthHeaders(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     };
-    
+
+    // First check sessionStorage for embedded mode token
+    let token: string | null = null;
+    if (typeof window !== "undefined") {
+      token = sessionStorage.getItem("clerk-token");
+    }
+
+    // Fall back to Clerk token getter
+    if (!token && BaseApiClient.tokenGetter) {
+      token = await BaseApiClient.tokenGetter();
+    }
+
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
-    
+
     return headers;
   }
 
@@ -26,7 +42,7 @@ export class BaseApiClient {
     requiresAuth: boolean = true
   ): Promise<T> {
     const headers = requiresAuth
-      ? this.getAuthHeaders()
+      ? await this.getAuthHeaders()
       : { "Content-Type": "application/json" };
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -45,7 +61,7 @@ export class BaseApiClient {
     requiresAuth: boolean = true
   ): Promise<U> {
     const headers = requiresAuth
-      ? this.getAuthHeaders()
+      ? await this.getAuthHeaders()
       : { "Content-Type": "application/json" };
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -64,7 +80,7 @@ export class BaseApiClient {
     requiresAuth: boolean = true
   ): Promise<T> {
     const headers = requiresAuth
-      ? this.getAuthHeaders()
+      ? await this.getAuthHeaders()
       : { "Content-Type": "application/json" };
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {

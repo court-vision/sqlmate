@@ -5,7 +5,6 @@ import type {
   UpdateTableRequest,
   UpdateTableResponse,
   QueryRequest,
-  StatusResponse,
   Table,
   DeleteTableResponse,
 } from "@/types/http";
@@ -15,9 +14,20 @@ const COMMON_OPTS = {
   credentials: "include" as const,
 };
 
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
+// Helper function to get auth headers (async to support Clerk token)
+const getAuthHeaders = async () => {
+  let token: string | null = null;
+
+  // Check sessionStorage for embedded mode token first
+  if (typeof window !== "undefined") {
+    token = sessionStorage.getItem("clerk-token");
+  }
+
+  // Fall back to Clerk token getter
+  if (!token) {
+    token = await getClerkToken();
+  }
+
   return token
     ? {
         ...COMMON_OPTS.headers,
@@ -26,17 +36,18 @@ const getAuthHeaders = () => {
     : COMMON_OPTS.headers;
 };
 
-export async function deleteUser() {
-  const response = await fetch("/auth/delete_user", {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-    credentials: "include",
-  });
-  if (!response.ok) {
-    throw new Error("User delete failed");
+// Module-level token getter that components can set
+let clerkTokenGetter: (() => Promise<string | null>) | null = null;
+
+export function setApiClientTokenGetter(getter: () => Promise<string | null>) {
+  clerkTokenGetter = getter;
+}
+
+async function getClerkToken(): Promise<string | null> {
+  if (clerkTokenGetter) {
+    return clerkTokenGetter();
   }
-  const data = await response.json();
-  return data;
+  return null;
 }
 
 export async function getTableData(
@@ -46,7 +57,7 @@ export async function getTableData(
     `/users/get_table_data?table_name=${encodeURIComponent(tableName)}`,
     {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
       credentials: "include",
     }
   );
@@ -64,7 +75,7 @@ export async function deleteUserTables(
 ): Promise<DeleteTableResponse> {
   const response = await fetch("/users/delete_table", {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
     credentials: "include",
     body: JSON.stringify({ table_names: tableNames }),
   });
@@ -80,7 +91,7 @@ export async function getTables() {
   console.log("Fetching tables...");
   const response = await fetch("/users/get_tables", {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
     credentials: "include",
   });
   if (!response.ok) {
@@ -101,7 +112,7 @@ export async function postUserTable(
 ): Promise<SaveTableResponse> {
   const response = await fetch("/users/save_table", {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
     credentials: "include",
     body: JSON.stringify({
       table_name: saveTableData.table_name,
@@ -121,7 +132,7 @@ export async function postVisualQuery(
 ): Promise<QueryResponse> {
   const response = await fetch("/query", {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
     credentials: "include",
     body: JSON.stringify(queryData),
   });
@@ -138,7 +149,7 @@ export async function postTableUpdate(
 ): Promise<UpdateTableResponse> {
   const response = await fetch("/users/update_table", {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
     credentials: "include",
     body: JSON.stringify(updateData),
   });
@@ -152,39 +163,6 @@ export async function postTableUpdate(
   return data;
 }
 
-export async function postRegister(
-  username: string,
-  password: string,
-  email: string
-) {
-  const res = await fetch("/auth/register", {
-    method: "POST",
-    ...COMMON_OPTS,
-    body: JSON.stringify({ username, password, email }),
-  });
-  if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-}
-
-export async function postLogin(username: string, password: string) {
-  const res = await fetch("/auth/login", {
-    method: "POST",
-    ...COMMON_OPTS,
-    body: JSON.stringify({ username, password }),
-  });
-  if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-  return res.json(); // Return the response including the token
-}
-
-export async function getCurrentUser() {
-  const res = await fetch("/auth/me", {
-    method: "GET",
-    headers: getAuthHeaders(),
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error((await res.json()).error || res.statusText);
-  return res.json();
-}
-
 // Function to get table data for CSV export
 export async function getTableDataForExport(
   tableName: string
@@ -193,7 +171,7 @@ export async function getTableDataForExport(
     `/users/get_table_data?table_name=${encodeURIComponent(tableName)}`,
     {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: await getAuthHeaders(),
       credentials: "include",
     }
   );

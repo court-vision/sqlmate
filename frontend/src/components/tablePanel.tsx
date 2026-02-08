@@ -72,7 +72,7 @@ export function TablePanel() {
     async function fetchSchema() {
       setIsLoading(true);
       try {
-        const schema = loadDatabaseSchema();
+        const schema = await loadDatabaseSchema();
         setTables(schema);
         // Update exported variable for other components to use
         dbTables = schema;

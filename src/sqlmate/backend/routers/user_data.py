@@ -1,5 +1,6 @@
 from sqlmate.backend.utils.serialization import query_output_to_table
-from sqlmate.backend.utils.auth import check_user
+from sqlmate.backend.utils.clerk_auth import verify_clerk_token
+from sqlmate.backend.utils.user_provisioning import get_or_create_sqlmate_user
 from sqlmate.backend.utils.generators import generate_update_query
 from sqlmate.backend.utils.db import get_timestamp, session_scope
 from sqlmate.backend.utils.user_tables import save_user_table, drop_user_tables
@@ -10,8 +11,8 @@ from sqlmate.backend.classes.queries.update import UpdateQuery
 from sqlmate.backend.classes.metadata import metadata
 
 
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Header, status, Response
+from typing import Any, Dict, List
+from fastapi import APIRouter, Depends, status, Response
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -24,17 +25,15 @@ class SaveTableRequest(BaseModel):
 class SaveTableResponse(BaseModel):
 	details: StatusResponse
 @router.post("/save_table", response_model=SaveTableResponse, status_code=status.HTTP_201_CREATED)
-def save_table(req: SaveTableRequest, response: Response, authorization: Optional[str] = Header(None)):
-	# Check the authentication of the user
-	user_id, username, error = check_user(authorization)
-	if error:
-		response.status_code = status.HTTP_401_UNAUTHORIZED
-		return SaveTableResponse(
-			details=StatusResponse(
-				status="error",
-				message=error
-			)
-		)
+def save_table(req: SaveTableRequest, response: Response, current_user: dict = Depends(verify_clerk_token)):
+	clerk_user_id = current_user.get("clerk_user_id")
+	email = current_user.get("email")
+
+	with session_scope("sqlmate") as session:
+		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
+
+	# Use clerk_user_id as the "username" for table naming
+	username = clerk_user_id
 
 	table_name = req.table_name
 	query = req.query
@@ -87,17 +86,14 @@ class DeleteTableResponse(BaseModel):
 	details: StatusResponse
 	deleted_tables: list[str] | None = None
 @router.post("/delete_table", response_model=DeleteTableResponse, status_code=status.HTTP_200_OK)
-def drop_table(req: DeleteTableRequest, response: Response, authorization: Optional[str] = Header(None)):
-	# Check the authentication of the user
-	user_id, username, error = check_user(authorization)
-	if error:
-		response.status_code = status.HTTP_401_UNAUTHORIZED
-		return DeleteTableResponse(
-			details=StatusResponse(
-				status="error",
-				message=error
-			)
-		)
+def drop_table(req: DeleteTableRequest, response: Response, current_user: dict = Depends(verify_clerk_token)):
+	clerk_user_id = current_user.get("clerk_user_id")
+	email = current_user.get("email")
+
+	with session_scope("sqlmate") as session:
+		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
+
+	username = clerk_user_id
 
 	# We allow both a single table name and a list of table names, however we convert it to a list regardless for ease of processing
 	temp = req.table_names
@@ -148,17 +144,12 @@ class GetTablesReponse(BaseModel):
 	details: StatusResponse
 	tables: List[Dict[str, Any]] | None = None
 @router.get("/get_tables", response_model=GetTablesReponse, status_code=status.HTTP_200_OK)
-def get_tables(response: Response, authorization: Optional[str] = Header(None)) -> GetTablesReponse:
-	# Check the authentication of the user
-	user_id, username, error = check_user(authorization)
-	if error:
-		response.status_code = status.HTTP_401_UNAUTHORIZED
-		return GetTablesReponse(
-			details=StatusResponse(
-				status="error",
-				message=error
-			)
-		)
+def get_tables(response: Response, current_user: dict = Depends(verify_clerk_token)) -> GetTablesReponse:
+	clerk_user_id = current_user.get("clerk_user_id")
+	email = current_user.get("email")
+
+	with session_scope("sqlmate") as session:
+		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
 
 	rows = []
 	with session_scope("sqlmate") as session:
@@ -197,17 +188,9 @@ class GetTableDataResponse(BaseModel):
 	status: StatusResponse
 	table: Table | None = None
 @router.get("/get_table_data", response_model=GetTableDataResponse, status_code=status.HTTP_200_OK)
-def get_table_data(table_name: str, response: Response, authorization: Optional[str] = Header(None)) -> GetTableDataResponse:
-	# Check the authentication of the user
-	user_id, username, error = check_user(authorization)
-	if error:
-		response.status_code = status.HTTP_401_UNAUTHORIZED
-		return GetTableDataResponse(
-			status=StatusResponse(
-				status="error",
-				message=error
-			)
-		)
+def get_table_data(table_name: str, response: Response, current_user: dict = Depends(verify_clerk_token)) -> GetTableDataResponse:
+	clerk_user_id = current_user.get("clerk_user_id")
+	username = clerk_user_id
 
 	if not table_name:
 		response.status_code = status.HTTP_400_BAD_REQUEST
@@ -269,15 +252,18 @@ class UpdateTableResponse(BaseModel):
 	status: StatusResponse
 	rows_affected: int | None = None
 @router.post("/update_table", response_model=UpdateTableResponse, status_code=status.HTTP_200_OK)
-def update(req: UpdateTableRequest, response: Response, authorization: Optional[str] = Header(None)):
-	# Check the authentication of the user
-	user_id, username, error = check_user(authorization)
-	if error:
-		response.status_code = status.HTTP_401_UNAUTHORIZED
+def update(req: UpdateTableRequest, response: Response, current_user: dict = Depends(verify_clerk_token)):
+	clerk_user_id = current_user.get("clerk_user_id")
+	username = clerk_user_id
+
+	# Guard: only allow updating u_ prefixed tables (user-owned tables)
+	target_table = req.query_params.table
+	if not target_table.startswith("u_"):
+		response.status_code = status.HTTP_403_FORBIDDEN
 		return UpdateTableResponse(
 			status=StatusResponse(
 				status="error",
-				message="UNAUTHORIZED:" + error
+				message="Can only update user-owned tables (u_ prefix)"
 			)
 		)
 

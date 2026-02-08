@@ -48,7 +48,7 @@ export default function EditTablePage() {
 
       // Handle unauthorized errors
       if (err.message.includes("UNAUTHORIZED")) {
-        router.push("/login");
+        router.push("/sign-in");
         return;
       }
     } finally {

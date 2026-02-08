@@ -22,7 +22,7 @@ import {
 import { AlertCircle, SaveIcon } from "lucide-react";
 import { postUserTable } from "@/lib/apiClient";
 import { toast } from "./ui/use-toast";
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@clerk/nextjs";
 
 export function ConsolePanel({
   consoleOutput,
@@ -38,17 +38,17 @@ export function ConsolePanel({
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isSignedIn } = useAuth();
 
   const handleSaveTable = async () => {
     // Check authentication first
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       toast({
         title: "Authentication Required",
         description: "Please sign in to save tables",
         variant: "destructive",
       });
-      router.push("/login");
+      router.push("/sign-in");
       return;
     }
 
@@ -141,12 +141,12 @@ export function ConsolePanel({
                 size="sm"
                 className="text-sm px-3 py-1 h-auto flex items-center gap-1 glass hover:bg-primary/20 hover-glow transition-all-smooth"
                 onClick={() => setShowSaveDialog(true)}
-                disabled={!consoleOutput || !queryOutput || !isAuthenticated}
+                disabled={!consoleOutput || !queryOutput || !isSignedIn}
               >
                 <SaveIcon size={14} /> Save Table
               </Button>
             </TooltipTrigger>
-            {!isAuthenticated && (
+            {!isSignedIn && (
               <TooltipContent>
                 <p>Please sign in to save tables</p>
               </TooltipContent>

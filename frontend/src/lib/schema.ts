@@ -1,6 +1,4 @@
-// Utility functions for the application
 import { TableItem } from "@/components/tablePanel";
-import schema from "@/../public/db_schema.json";
 
 interface SchemaTable {
   table: string;
@@ -10,11 +8,22 @@ interface SchemaTable {
   }>;
 }
 
-// Function to load database schema from JSON
-export function loadDatabaseSchema(): TableItem[] {
+let cachedSchema: TableItem[] | null = null;
+
+// Function to load database schema from the backend /schema endpoint
+export async function loadDatabaseSchema(): Promise<TableItem[]> {
+  if (cachedSchema) {
+    return cachedSchema;
+  }
+
   try {
-    // Directly return the schema from the JSON file
-    return (schema as SchemaTable[]).map((table) => ({
+    const response = await fetch("/schema");
+    if (!response.ok) {
+      throw new Error(`Failed to fetch schema: ${response.status}`);
+    }
+
+    const data: SchemaTable[] = await response.json();
+    cachedSchema = data.map((table) => ({
       id: `${table.table}-table`,
       name: table.table,
       columns: table.columns.map((col) => ({
@@ -22,8 +31,10 @@ export function loadDatabaseSchema(): TableItem[] {
         type: col.type,
       })),
     }));
+
+    return cachedSchema;
   } catch (error) {
     console.error("Error loading database schema:", error);
-    return []; // Return empty array on error
+    return [];
   }
 }

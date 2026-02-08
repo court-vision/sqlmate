@@ -3,15 +3,24 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
-    env_file:
-      - ~/.sqlmate/secrets.env
+    environment:
+      - PORT=8080
+      - DB_TYPE=postgresql
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER:-sqlmate_reader}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_SCHEMA=*
+      - SQLMATE_ALLOWED_SCHEMAS=${SQLMATE_ALLOWED_SCHEMAS:-nba,stats_s2}
+      - SQLMATE_BLOCKED_TABLES=${SQLMATE_BLOCKED_TABLES:-}
+      - CLERK_JWKS_URL=${CLERK_JWKS_URL}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - SQLMATE_SCHEMA_DIR=/app/schema
     ports:
       - "8080:8080"
-    # dev-only:
-    # volumes:
-    #   - ./src:/app/src
-    #   - ./:/app
-    # command: ["sqlmate-backend", "--reload"]  # or uvicorn with --reload
+    volumes:
+      - schema-data:/app/schema
 
   frontend:
     build:
@@ -21,5 +30,10 @@ services:
         - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
     environment:
       - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
     ports:
       - "3000:3000"
+
+volumes:
+  schema-data:

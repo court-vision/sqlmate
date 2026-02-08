@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy import text
 from sqlmate.backend.utils.serialization import query_output_to_table
 from sqlmate.backend.utils.generators import generate_query
@@ -11,6 +13,24 @@ from fastapi import APIRouter, status, Response
 from pydantic import BaseModel
 
 router = APIRouter()
+
+# Dangerous SQL keywords that indicate write/DDL operations
+_WRITE_PATTERN = re.compile(
+	r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE)\b",
+	re.IGNORECASE,
+)
+
+
+def _validate_read_only(sql: str) -> Optional[str]:
+	"""
+	Check that the generated SQL is read-only.
+	Returns an error message if a write keyword is found, None otherwise.
+	"""
+	match = _WRITE_PATTERN.search(sql)
+	if match:
+		return f"Query rejected: '{match.group()}' statements are not allowed"
+	return None
+
 
 # ================================= QUERY ENDPOINTS =================================
 
@@ -40,8 +60,18 @@ def run_query(req: QueryRequest, response: Response) -> QueryResponse:
 
 
 	query_body = generate_query(query, req.options or {})
-	# with open("logs/query_log.txt", "w") as f:
-	#     f.write(query_body)
+
+	# Validate that the generated SQL is read-only
+	validation_error = _validate_read_only(query_body)
+	if validation_error:
+		response.status_code = status.HTTP_403_FORBIDDEN
+		return QueryResponse(
+			status=StatusResponse(
+				status="error",
+				message=validation_error
+			),
+			table=None
+		)
 
 	try:
 		with session_scope("user") as session:

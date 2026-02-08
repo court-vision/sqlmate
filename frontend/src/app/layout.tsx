@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next"
-import { AuthProvider } from "@/contexts/authContext";
+import { Analytics } from "@vercel/analytics/next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { AuthInit } from "@/components/authInit";
 
 export const metadata: Metadata = {
   title: "SQLMate",
@@ -15,12 +16,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="isolate">
-        <AuthProvider>{children}</AuthProvider>
-        <Toaster />
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className="isolate">
+          <AuthInit />
+          {children}
+          <Toaster />
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

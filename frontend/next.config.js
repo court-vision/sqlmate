@@ -17,6 +17,23 @@ const nextConfig = {
         source: "/users/:path*",
         destination: `${API_URL}/users/:path*`,
       },
+      {
+        source: "/schema",
+        destination: `${API_URL}/schema`,
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://courtvision.dev",
+          },
+        ],
+      },
     ];
   },
 };

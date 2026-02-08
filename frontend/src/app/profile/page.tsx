@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/authContext";
+import { useUser } from "@clerk/nextjs";
 import { Header } from "@/components/header";
-import { authService } from "@/services/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,42 +18,35 @@ import {
 import { toast } from "@/components/ui/use-toast";
 
 export default function ProfilePage() {
-  const { user, loading, logout, isAuthenticated } = useAuth();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [loading, isAuthenticated, router]);
-
-  if (loading) {
-    return <p className="p-4 text-center">Loading profile…</p>;
+  if (!isLoaded) {
+    return <p className="p-4 text-center">Loading profile...</p>;
   }
 
   if (!user) {
-    return null; // This will redirect in the useEffect
+    return null;
   }
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      await authService.deleteUser();
+      await user.delete();
       toast({
         title: "Account deleted",
         description: "Your account has been successfully deleted.",
       });
-      logout(); // Log the user out after successful deletion
-      router.push("/"); // Redirect to home page
+      router.push("/");
     } catch (err: any) {
       toast({
         title: "Error",
         description: err.message || "Failed to delete account",
         variant: "destructive",
       });
-      setIsDeleting(false); // Only reset if there was an error
+      setIsDeleting(false);
     }
   };
 
@@ -66,22 +58,17 @@ export default function ProfilePage() {
         <div className="space-y-4 p-4 glass rounded-lg">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {user.username.charAt(0).toUpperCase()}
+              {(user.firstName || user.username || "U").charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="font-medium">{user.username}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="font-medium">{user.firstName || user.username}</p>
+              <p className="text-sm text-muted-foreground">
+                {user.primaryEmailAddress?.emailAddress}
+              </p>
             </div>
           </div>
         </div>
         <div className="flex flex-col space-y-4 pt-4">
-          <Button
-            variant="destructive"
-            onClick={logout}
-            className="glass hover:bg-red-500/20 hover-glow transition-all-smooth"
-          >
-            Logout
-          </Button>
           <Button
             variant="outline"
             className="glass border-red-400/50 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover-glow transition-all-smooth"
