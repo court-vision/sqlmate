@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useAuth, useUser, UserButton } from "@clerk/nextjs";
 import { Button } from "./ui/button";
@@ -7,7 +8,7 @@ import { Table } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 
-export function Header() {
+function HeaderContent() {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const router = useRouter();
@@ -68,5 +69,30 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+function HeaderFallback() {
+  return (
+    <header className="sticky top-0 z-50 w-full glass border-b animate-fade-in">
+      <div className="h-14 flex items-center justify-between px-4">
+        <div className="pl-4">
+          <Link
+            href="/"
+            className="text-2xl font-extrabold gradient-title"
+          >
+            SQLMate
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export function Header() {
+  return (
+    <Suspense fallback={<HeaderFallback />}>
+      <HeaderContent />
+    </Suspense>
   );
 }

@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-const ALLOWED_ORIGIN = "https://courtvision.dev";
+const ALLOWED_ORIGINS = [
+  "https://courtvision.dev",
+  "https://www.courtvision.dev",
+  "http://localhost:3001",
+  "http://localhost:3000",
+];
 
 export function useEmbeddedAuth() {
   const searchParams = useSearchParams();
@@ -16,7 +21,7 @@ export function useEmbeddedAuth() {
     if (!embedded) return;
 
     function handleMessage(event: MessageEvent) {
-      if (event.origin !== ALLOWED_ORIGIN) return;
+      if (!ALLOWED_ORIGINS.includes(event.origin)) return;
       if (event.data?.type === "clerk-token" && event.data?.token) {
         sessionStorage.setItem("clerk-token", event.data.token);
       }

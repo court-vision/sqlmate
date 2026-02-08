@@ -30,7 +30,7 @@ const nextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https://courtvision.dev",
+            value: "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev",
           },
         ],
       },

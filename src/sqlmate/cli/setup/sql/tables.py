@@ -1,48 +1,26 @@
-# ---- MySQL variants ----
-
-MYSQL_CREATE_USERS_TABLE = """
-CREATE TABLE IF NOT EXISTS sqlmate.users (
-	id INT AUTO_INCREMENT PRIMARY KEY,
-	username VARCHAR(50) NOT NULL UNIQUE,
-	password VARCHAR(255) NOT NULL,
-	email VARCHAR(100) NOT NULL UNIQUE,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
+# ---- MySQL variant ----
 
 MYSQL_CREATE_USER_TABLES_TABLE = """
 CREATE TABLE IF NOT EXISTS sqlmate.user_tables (
-	user_id INT NOT NULL,
+	clerk_user_id VARCHAR(100) NOT NULL,
 	table_name VARCHAR(100) NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (user_id, table_name),
-	FOREIGN KEY (user_id) REFERENCES sqlmate.users(id) ON DELETE CASCADE
+	PRIMARY KEY (clerk_user_id, table_name)
 );
 """
 
-# ---- PostgreSQL variants ----
-
-PG_CREATE_USERS_TABLE = """
-CREATE TABLE IF NOT EXISTS sqlmate.users (
-	id SERIAL PRIMARY KEY,
-	username VARCHAR(50) NOT NULL UNIQUE,
-	password VARCHAR(255) NOT NULL,
-	email VARCHAR(100) NOT NULL UNIQUE,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
+# ---- PostgreSQL variant ----
 
 PG_CREATE_USER_TABLES_TABLE = """
 CREATE TABLE IF NOT EXISTS sqlmate.user_tables (
-	user_id INT NOT NULL,
+	clerk_user_id VARCHAR(100) NOT NULL,
 	table_name VARCHAR(100) NOT NULL,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	PRIMARY KEY (user_id, table_name),
-	FOREIGN KEY (user_id) REFERENCES sqlmate.users(id) ON DELETE CASCADE
+	PRIMARY KEY (clerk_user_id, table_name)
 );
 """
 
 def get_table_ddl(db_type: str) -> list[str]:
     if db_type == "mysql":
-        return [MYSQL_CREATE_USERS_TABLE, MYSQL_CREATE_USER_TABLES_TABLE]
-    return [PG_CREATE_USERS_TABLE, PG_CREATE_USER_TABLES_TABLE]
+        return [MYSQL_CREATE_USER_TABLES_TABLE]
+    return [PG_CREATE_USER_TABLES_TABLE]

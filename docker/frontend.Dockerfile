@@ -1,15 +1,15 @@
-FROM node:23.11.0-slim
+FROM oven/bun:1-slim
 
 WORKDIR /app
 COPY ./frontend /app
 
-RUN npm install
+RUN bun install --frozen-lockfile
 
 # Set environment variables with default values
-ENV BACKEND_URL=http://backend:8080
+ENV BACKEND_URL=http://backend:8081
 
 # Build the Next.js app
-RUN npm run build
+RUN bun run build
 
 # Start the app
-CMD ["npm", "start"]
+CMD ["bun", "run", "start", "--port", "3001"]

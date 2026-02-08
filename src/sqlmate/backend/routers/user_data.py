@@ -1,6 +1,5 @@
 from sqlmate.backend.utils.serialization import query_output_to_table
 from sqlmate.backend.utils.clerk_auth import verify_clerk_token
-from sqlmate.backend.utils.user_provisioning import get_or_create_sqlmate_user
 from sqlmate.backend.utils.generators import generate_update_query
 from sqlmate.backend.utils.db import get_timestamp, session_scope
 from sqlmate.backend.utils.user_tables import save_user_table, drop_user_tables
@@ -27,12 +26,6 @@ class SaveTableResponse(BaseModel):
 @router.post("/save_table", response_model=SaveTableResponse, status_code=status.HTTP_201_CREATED)
 def save_table(req: SaveTableRequest, response: Response, current_user: dict = Depends(verify_clerk_token)):
 	clerk_user_id = current_user.get("clerk_user_id")
-	email = current_user.get("email")
-
-	with session_scope("sqlmate") as session:
-		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
-
-	# Use clerk_user_id as the "username" for table naming
 	username = clerk_user_id
 
 	table_name = req.table_name
@@ -50,7 +43,7 @@ def save_table(req: SaveTableRequest, response: Response, current_user: dict = D
 	created_at = get_timestamp()
 	try:
 		with session_scope("sqlmate") as session:
-			save_user_table(session, user_id, username, table_name, created_at, query)
+			save_user_table(session, clerk_user_id, username, table_name, created_at, query)
 	except IntegrityError:
 		response.status_code = status.HTTP_409_CONFLICT
 		return SaveTableResponse(
@@ -88,11 +81,6 @@ class DeleteTableResponse(BaseModel):
 @router.post("/delete_table", response_model=DeleteTableResponse, status_code=status.HTTP_200_OK)
 def drop_table(req: DeleteTableRequest, response: Response, current_user: dict = Depends(verify_clerk_token)):
 	clerk_user_id = current_user.get("clerk_user_id")
-	email = current_user.get("email")
-
-	with session_scope("sqlmate") as session:
-		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
-
 	username = clerk_user_id
 
 	# We allow both a single table name and a list of table names, however we convert it to a list regardless for ease of processing
@@ -121,7 +109,7 @@ def drop_table(req: DeleteTableRequest, response: Response, current_user: dict =
 
 	try:
 		with session_scope("sqlmate") as session:
-			dropped = drop_user_tables(session, user_id, username, table_names)
+			dropped = drop_user_tables(session, clerk_user_id, username, table_names)
 	except SQLAlchemyError as e:
 		print(e)
 		response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -146,17 +134,13 @@ class GetTablesReponse(BaseModel):
 @router.get("/get_tables", response_model=GetTablesReponse, status_code=status.HTTP_200_OK)
 def get_tables(response: Response, current_user: dict = Depends(verify_clerk_token)) -> GetTablesReponse:
 	clerk_user_id = current_user.get("clerk_user_id")
-	email = current_user.get("email")
-
-	with session_scope("sqlmate") as session:
-		user_id = get_or_create_sqlmate_user(session, clerk_user_id, email)
 
 	rows = []
 	with session_scope("sqlmate") as session:
 		try:
 			result = session.execute(
-				text("SELECT table_name, created_at FROM user_tables WHERE user_id = :user_id"),
-				{"user_id": user_id}
+				text("SELECT table_name, created_at FROM user_tables WHERE clerk_user_id = :clerk_user_id"),
+				{"clerk_user_id": clerk_user_id}
 			)
 			rows = result.fetchall()
 		except SQLAlchemyError as e:

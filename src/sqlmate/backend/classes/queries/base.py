@@ -115,7 +115,8 @@ class Constraint:
 
     # Handles if we are comparing strings
     def process_value(self, value: str) -> str:
-        table_name, attribute_name = self.attribute.split(".")
+        # Use rsplit to handle schema-qualified names like "nba.players.name"
+        table_name, attribute_name = self.attribute.rsplit(".", 1)
         db_type = metadata.get_type(table_name, attribute_name)
         if db_type in ["STR", "DATE"]:
             new_value = ""

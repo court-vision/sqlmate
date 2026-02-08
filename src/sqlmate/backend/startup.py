@@ -3,11 +3,10 @@ Non-interactive startup routine.
 
 Called once via the FastAPI lifespan hook. It:
 1. Creates the sqlmate schema / database
-2. Creates the clerk_users table
-3. Creates existing application tables (users, user_tables)
-4. Introspects database metadata
-5. Filters by SQLMATE_ALLOWED_SCHEMAS / SQLMATE_BLOCKED_TABLES
-6. Generates db_schema.json and writes it to SQLMATE_SCHEMA_DIR
+2. Creates the user_tables table
+3. Introspects database metadata
+4. Filters by SQLMATE_ALLOWED_SCHEMAS / SQLMATE_BLOCKED_TABLES
+5. Generates db_schema.json and writes it to SQLMATE_SCHEMA_DIR
 """
 
 import json
@@ -21,29 +20,6 @@ from sqlmate.backend.utils.constants import (
 from sqlmate.cli.setup.sql.database import get_init_ddl
 from sqlmate.cli.setup.sql.tables import get_table_ddl
 from sqlmate.cli.setup.db_setup import generate_db_schema_json
-
-
-# DDL for the clerk_users table (PostgreSQL)
-PG_CREATE_CLERK_USERS_TABLE = """
-CREATE TABLE IF NOT EXISTS sqlmate.clerk_users (
-    id SERIAL PRIMARY KEY,
-    clerk_user_id VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255),
-    display_name VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
-
-# DDL for the clerk_users table (MySQL)
-MYSQL_CREATE_CLERK_USERS_TABLE = """
-CREATE TABLE IF NOT EXISTS sqlmate.clerk_users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    clerk_user_id VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255),
-    display_name VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
 
 
 def _build_startup_db() -> SQLAlchemyDB:
@@ -106,15 +82,10 @@ def run_startup() -> None:
     db.execute(init_ddl, err_msg="Failed to create sqlmate schema/database")
     print("[startup] sqlmate schema/database ensured.")
 
-    # 2. Create clerk_users table
-    clerk_ddl = MYSQL_CREATE_CLERK_USERS_TABLE if DB_TYPE == "mysql" else PG_CREATE_CLERK_USERS_TABLE
-    db.execute(clerk_ddl, err_msg="Failed to create clerk_users table")
-    print("[startup] clerk_users table ensured.")
-
-    # 3. Create existing application tables (users, user_tables)
+    # 2. Create user_tables table
     table_queries = get_table_ddl(DB_TYPE)
-    db.execute_many(table_queries, err_msg="Failed to create application tables")
-    print("[startup] Application tables ensured.")
+    db.execute_many(table_queries, err_msg="Failed to create user_tables table")
+    print("[startup] user_tables table ensured.")
 
     # 4. Introspect metadata
     metadata = db.fetch_metadata()
