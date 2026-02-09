@@ -119,7 +119,7 @@ export const QueryResultTable: React.FC<Props> = ({
             {currentRows.map((row, i) => (
               <tr
                 key={startIndex + i}
-                className={`hover:bg-accent transition-all-smooth ${
+                className={`hover:bg-primary/10 transition-all-smooth ${
                   i % 2 === 0 ? "" : "bg-muted"
                 }`}
               >
