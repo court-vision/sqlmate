@@ -423,7 +423,7 @@ export function StudioCanvas({
               />
             </div>
             <Button
-              className="gradient-primary hover:shadow-lg hover:scale-105 transition-all-smooth cursor-pointer"
+              className="border border-primary bg-background text-foreground hover:shadow-lg hover:scale-105 transition-all-smooth cursor-pointer"
               onClick={handleRunVisualQuery}
             >
               Run Query
