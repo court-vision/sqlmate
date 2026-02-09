@@ -11,4 +11,4 @@ COPY src /app/src
 RUN pip install .
 
 EXPOSE 8081
-CMD ["uvicorn", "sqlmate.backend.main:app", "--host", "0.0.0.0", "--port", "8081"]
+CMD ["uvicorn", "sqlmate.backend.main:app", "--host", "::", "--port", "8081"]
