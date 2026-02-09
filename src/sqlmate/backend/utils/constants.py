@@ -32,6 +32,7 @@ DB_SCHEMA = os.getenv("DB_SCHEMA", "public")  # PostgreSQL schema to search for 
 CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL")
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 
+
 # Schema introspection filters
 # Comma-separated list of schemas to include (e.g. "public,analytics")
 SQLMATE_ALLOWED_SCHEMAS = [s.strip() for s in os.getenv("SQLMATE_ALLOWED_SCHEMAS", "").split(",") if s.strip()]

@@ -28,6 +28,7 @@ services:
       dockerfile: docker/frontend.Dockerfile
       args:
         - BACKEND_URL=${BACKEND_URL:-http://backend:8081}
+        - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
     environment:
       - BACKEND_URL=${BACKEND_URL:-http://backend:8081}
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}

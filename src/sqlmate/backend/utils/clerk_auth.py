@@ -44,7 +44,7 @@ def get_public_key_for_token(token: str):
     """Get the RSA public key matching the token's 'kid' header."""
     jwks = get_clerk_jwks()
 
-    try:
+    try:   
         unverified_header = jwt.get_unverified_header(token)
     except jwt.exceptions.DecodeError as e:
         print(f"Failed to decode token header: {e}")
