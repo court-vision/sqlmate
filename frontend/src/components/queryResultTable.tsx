@@ -101,9 +101,9 @@ export const QueryResultTable: React.FC<Props> = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl glass border border-white/10 shadow-lg">
+      <div className="overflow-x-auto rounded-xl glass shadow-lg">
         <table className="min-w-full text-sm text-left">
-          <thead className="bg-white/5 border-b border-white/10">
+          <thead className="bg-muted border-b border-border">
             <tr>
               {columns.map((col, index) => (
                 <th
@@ -119,14 +119,14 @@ export const QueryResultTable: React.FC<Props> = ({
             {currentRows.map((row, i) => (
               <tr
                 key={startIndex + i}
-                className={`hover:bg-white/10 transition-all-smooth ${
-                  i % 2 === 0 ? "bg-white/5" : "bg-white/10"
+                className={`hover:bg-accent transition-all-smooth ${
+                  i % 2 === 0 ? "" : "bg-muted"
                 }`}
               >
                 {row.map((value: any, j: number) => (
                   <td
                     key={`${startIndex + i}-${j}`}
-                    className="px-4 py-2 border-b border-white/5 text-white"
+                    className="px-4 py-2 border-b border-border text-foreground"
                   >
                     {String(value)}
                   </td>
@@ -145,7 +145,7 @@ export const QueryResultTable: React.FC<Props> = ({
             size="sm"
             onClick={goToPreviousPage}
             disabled={currentPage === 1}
-            className="glass hover:bg-white/10 transition-all-smooth"
+            className="glass hover:bg-accent transition-all-smooth"
           >
             <ChevronLeft size={16} />
             Previous
@@ -163,8 +163,8 @@ export const QueryResultTable: React.FC<Props> = ({
                     onClick={() => goToPage(page as number)}
                     className={`transition-all-smooth ${
                       currentPage === page
-                        ? "gradient-primary text-white"
-                        : "glass hover:bg-white/10"
+                        ? "bg-primary text-primary-foreground"
+                        : "glass hover:bg-accent"
                     }`}
                   >
                     {page}
@@ -179,7 +179,7 @@ export const QueryResultTable: React.FC<Props> = ({
             size="sm"
             onClick={goToNextPage}
             disabled={currentPage === totalPages}
-            className="glass hover:bg-white/10 transition-all-smooth"
+            className="glass hover:bg-accent transition-all-smooth"
           >
             Next
             <ChevronRight size={16} />

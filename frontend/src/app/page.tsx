@@ -98,7 +98,7 @@ export default function Home() {
             </ResizablePanel>
             <ResizableHandle
               withHandle
-              className="bg-white/10 hover:bg-white/20 transition-all-smooth"
+              className="bg-border hover:bg-accent transition-all-smooth"
             />
             <ResizablePanel defaultSize={30} minSize={10}>
               <ConsolePanel

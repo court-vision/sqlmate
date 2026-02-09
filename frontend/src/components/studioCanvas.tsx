@@ -329,7 +329,7 @@ export function StudioCanvas({
           className={`flex-grow flex flex-col items-center justify-center p-8 border-2 min-h-84 ${
             isOver
               ? "border-primary border-dashed bg-primary/10 animate-glow"
-              : "border-white/20 border-dashed"
+              : "border-border border-dashed"
           } rounded-lg transition-all-smooth glass`}
         >
           {isOver ? (
@@ -360,7 +360,7 @@ export function StudioCanvas({
                 {orderByPriority.map((item, index) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-1 glass rounded p-1 text-xs hover:bg-white/10 transition-all-smooth"
+                    className="flex items-center gap-1 glass rounded p-1 text-xs hover:bg-accent transition-all-smooth"
                   >
                     <span className="text-muted-foreground">{index + 1}.</span>
                     <span className="font-medium">
@@ -403,7 +403,7 @@ export function StudioCanvas({
 
         {/* Sticky Button Container - floats above scrolling content */}
         <div className="absolute bottom-6 right-6 z-50">
-          <div className="glass rounded-lg p-4 backdrop-blur-md border border-white/10 flex items-center gap-2">
+          <div className="glass rounded-lg p-4 backdrop-blur-md flex items-center gap-2">
             <div className="flex items-center">
               <label
                 htmlFor="query-limit"

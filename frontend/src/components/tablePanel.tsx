@@ -44,7 +44,7 @@ function DraggableTableItem({
         // Note: we're not transforming the original element anymore,
         // that's handled by the DragOverlay instead
       }}
-      className={`cursor-grab active:cursor-grabbing p-3 glass hover:bg-white/10 hover-lift transition-all-smooth ${
+      className={`cursor-grab active:cursor-grabbing p-3 glass hover:bg-accent hover-lift transition-all-smooth ${
         isDragging ? "ring-2 ring-primary animate-glow" : ""
       }`}
       {...listeners}
@@ -88,12 +88,12 @@ export function TablePanel() {
 
   return (
     <div
-      className={`glass border-r border-white/10 transition-all duration-200 flex flex-col ${
+      className={`glass border-r border-border transition-all duration-200 flex flex-col ${
         isPanelExpanded ? "w-64" : "w-16"
       }`}
       style={{ zIndex: 10 }} // Ensure the panel has a reasonable z-index
     >
-      <div className="p-4 border-b border-white/10 flex justify-between items-center">
+      <div className="p-4 border-b border-border flex justify-between items-center">
         <h2
           className={`font-medium gradient-text ${
             isPanelExpanded ? "block" : "hidden"
@@ -105,7 +105,7 @@ export function TablePanel() {
           variant="ghost"
           size="sm"
           onClick={() => setIsPanelExpanded(!isPanelExpanded)}
-          className="h-8 w-8 hover:bg-white/10 transition-all-smooth"
+          className="h-8 w-8 hover:bg-accent transition-all-smooth"
         >
           {isPanelExpanded ? "←" : "→"}
         </Button>

@@ -103,7 +103,7 @@ export function ConsolePanel({
   };
 
   return (
-    <div className="h-full flex flex-col glass border-t border-white/10">
+    <div className="h-full flex flex-col glass border-t border-border">
       <div className="flex items-center justify-between px-4 h-10 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <Button
@@ -111,8 +111,8 @@ export function ConsolePanel({
             size="sm"
             className={`text-sm px-3 py-1 h-auto transition-all-smooth ${
               activeTab === "results"
-                ? "gradient-primary text-white"
-                : "glass hover:bg-white/10"
+                ? "bg-primary text-primary-foreground"
+                : "glass hover:bg-accent"
             }`}
             onClick={() => setActiveTab("results")}
           >
@@ -123,8 +123,8 @@ export function ConsolePanel({
             size="sm"
             className={`text-sm px-3 py-1 h-auto transition-all-smooth ${
               activeTab === "query"
-                ? "gradient-primary text-white"
-                : "glass hover:bg-white/10"
+                ? "bg-primary text-primary-foreground"
+                : "glass hover:bg-accent"
             }`}
             onClick={() => setActiveTab("query")}
           >
@@ -226,7 +226,7 @@ export function ConsolePanel({
               <Button
                 variant="outline"
                 disabled={isSaving}
-                className="glass hover:bg-white/10 transition-all-smooth"
+                className="glass hover:bg-accent transition-all-smooth"
               >
                 Cancel
               </Button>
