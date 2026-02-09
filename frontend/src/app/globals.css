@@ -147,29 +147,16 @@
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary) 0%, color-mix(in srgb, var(--primary), white 40%) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
   font-weight: 600;
 }
 
 .gradient-title {
-  background: linear-gradient(
-    135deg,
-    var(--primary) 0%,
-    color-mix(in srgb, var(--primary), white 30%) 50%,
-    color-mix(in srgb, var(--primary), white 50%) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
   font-weight: 800;
   font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont,
     sans-serif;
   letter-spacing: -0.02em;
-  background-size: 200% 200%;
-  animation: gradientShift 4s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
