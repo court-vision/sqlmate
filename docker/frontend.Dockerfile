@@ -6,7 +6,7 @@ COPY ./frontend /app
 RUN bun install --frozen-lockfile
 
 # Set environment variables with default values
-ENV BACKEND_URL=http://backend:8081
+ENV BACKEND_URL=http://sqlmate-backend:8081
 
 # NEXT_PUBLIC_* vars must be available at build time for Next.js to inline them
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
