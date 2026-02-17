@@ -17,14 +17,18 @@ def generate_query(queries: List[BaseQuery], options: dict) -> str:
     from_clause += queries[0].get_FROM_clause()
     query += from_clause + '\n'
 
-    join_clause = ""
-    for i in range(1, len(queries)):
-        temp_join_clause = f"{metadata.shortest_path(queries[i - 1].table_name, queries[i].table_name)} "
-        if len(temp_join_clause) == 1 and temp_join_clause == " ":
+    joined_tables: set[str] = {queries[0].table_name}
+    join_parts: list[str] = []
+    for table_query in queries[1:]:
+        target = table_query.table_name
+        if target in joined_tables:
             continue
-        join_clause += temp_join_clause
-    join_clause = join_clause[:-1]
-    query += join_clause + '\n' if join_clause else ""
+        path = metadata.shortest_path_from_set(joined_tables, target)
+        for table, edge in path:
+            if table not in joined_tables:
+                join_parts.append(f"JOIN {table} ON {edge}")
+                joined_tables.add(table)
+    query += " ".join(join_parts) + '\n' if join_parts else ""
 
     where_clause = "WHERE "
     for table_query in queries:

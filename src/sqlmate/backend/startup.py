@@ -21,6 +21,8 @@ from sqlmate.cli.setup.sql.database import get_init_ddl
 from sqlmate.cli.setup.sql.tables import get_table_ddl
 from sqlmate.cli.setup.db_setup import generate_db_schema_json
 
+print(SQLMATE_SCHEMA_DIR)
+
 
 def _build_startup_db() -> SQLAlchemyDB:
     """Build a SQLAlchemyDB instance for startup operations."""

@@ -237,6 +237,30 @@ class Metadata:
 
 		raise ValueError(f"No path found between {source} and {destination}")
 
+	def shortest_path_from_set(self, sources: set[str], destination: str) -> list[tuple[str, "Edge"]]:
+		"""Multi-source BFS: finds shortest path from any source to destination.
+
+		Returns a list of (table_to_join, edge) tuples representing the path.
+		Only includes nodes not already in the sources set.
+		"""
+		queue: deque[tuple[str, list[tuple[str, Edge]]]] = deque()
+		visited: set[str] = set()
+
+		for source in sources:
+			queue.append((source, []))
+			visited.add(source)
+
+		while queue:
+			node, path = queue.popleft()
+			if node == destination:
+				return path
+			for edge in self.get_edges(node):
+				if edge.destination not in visited:
+					visited.add(edge.destination)
+					queue.append((edge.destination, path + [(edge.destination, edge)]))
+
+		raise ValueError(f"No path found to {destination}")
+
 	def get_edge(self, source: str, destination: str) -> str:
 		for edge in self.graph[source]:
 			if edge.destination == destination:
