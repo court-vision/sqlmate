@@ -120,7 +120,7 @@ class Constraint:
         db_type = metadata.get_type(table_name, attribute_name)
         if db_type in ["STR", "DATE"]:
             new_value = ""
-            if self.operator in ["=", "!="]:
+            if self.operator in ["=", "!=", ">=", "<="]:
                 new_value = f"'{value}'"
             else:
                 if self.operator == "SUBSTRING":
