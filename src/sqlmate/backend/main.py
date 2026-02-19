@@ -22,18 +22,24 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://sqlmate-ruddy.vercel.app",
+    "https://sqlmate.courtvision.dev",
+    "https://sqlmate-backend.courtvision.dev",
+    "https://courtvision.dev",
+    "https://www.courtvision.dev",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://sqlmate-ruddy.vercel.app",
-        "https://sqlmate.courtvision.dev",
-        "https://courtvision.dev",
-        "https://www.courtvision.dev",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
+    # Keep Court Vision subdomains working even if hostnames shift (e.g. sqlmate-backend, staging).
+    allow_origin_regex=r"^https://([a-z0-9-]+\.)?courtvision\.dev$",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    # OPTIONS preflight should never be blocked by method allow-list drift.
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -42,7 +48,7 @@ app.add_middleware(
 async def add_csp_header(request: Request, call_next):
     response: Response = await call_next(request)
     response.headers["Content-Security-Policy"] = (
-        "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev https://sqlmate.courtvision.dev"
+        "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev https://sqlmate.courtvision.dev https://sqlmate-backend.courtvision.dev"
     )
     return response
 
