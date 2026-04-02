@@ -70,8 +70,7 @@ class BaseQuery:
         clause = ""
 
         for ordering in self.order_by:
-            name_or_alias = self.alias_map.get(ordering.attribute, ordering.attribute)
-            clause += f"{name_or_alias} {ordering.sort},"
+            clause += f"{ordering.attribute} {ordering.sort},"
 
         return clause
 
