@@ -1,6 +1,7 @@
 from sqlmate.backend.classes.queries.update import UpdateQuery
 from sqlmate.backend.classes.queries.base import BaseQuery
 from sqlmate.backend.classes.metadata import metadata
+from sqlmate.backend.utils.guard import safe_limit, sort_direction
 from typing import List
 
 
@@ -94,14 +95,16 @@ def generate_query(queries: List[BaseQuery], options: dict) -> str:
     if order_by_list := options.get("order_by"):
         for order_by in order_by_list:
             table_name, attr_name = order_by.get("table_name"), order_by.get("attribute")
-            order_by_clause += f"{lookup_alias(attr_name, table_name, queries)} {order_by.get('sort')},"
+            direction = sort_direction(order_by.get("sort"))
+            order_by_clause += f"{lookup_alias(attr_name, table_name, queries)} {direction},"
     if order_by_clause != "ORDER BY ":
         order_by_clause = order_by_clause[:-1]
         query += order_by_clause + '\n'
 
     # --- LIMIT ---
-    if limit := options.get("limit"):
-        query += f"LIMIT {limit}\n"
+    # Always bounded: LIMIT was interpolated raw, and an unbounded result set is
+    # its own denial-of-service on a shared database.
+    query += f"LIMIT {safe_limit(options.get('limit'))}\n"
 
     return query
 

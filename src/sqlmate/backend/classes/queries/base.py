@@ -1,4 +1,7 @@
 from sqlmate.backend.classes.metadata import metadata
+from sqlmate.backend.utils.guard import (
+    assert_identifier, assert_operator, assert_table, quote_literal, safe_numeric,
+)
 from typing import List
 from sqlmate.backend.classes.http import QueryParams, UpdateQueryParams
 
@@ -7,7 +10,7 @@ from sqlmate.backend.classes.http import QueryParams, UpdateQueryParams
 # which we will use to generate the query
 class BaseQuery:
     def __init__(self, input: QueryParams | UpdateQueryParams, username: str = "") -> None:
-        self.table_name: str = self.format_table_name(username, input.get("table", ""))
+        self.table_name: str = assert_table(self.format_table_name(username, input.get("table", "")))
         if not input.get("attributes") and not input.get("updates"):
             raise ValueError(f"No attribues or updates selected for {self.table_name} table")
         self.attributes: List[Attribute] = [Attribute(details, self.table_name) for details in input.get("attributes", [])]
@@ -94,8 +97,10 @@ class BaseQuery:
 
 class Attribute:
     def __init__(self, input: dict, table_name: str) -> None:
-        self.attribute: str = f"{table_name}.{input.get('attribute', '')}"
-        self.alias: str = input.get("alias", "")
+        column = assert_identifier(input.get("attribute", ""), "attribute")
+        self.attribute: str = f"{table_name}.{column}"
+        alias = input.get("alias", "")
+        self.alias: str = assert_identifier(alias, "alias") if alias else ""
 
     def __str__(self) -> str:
         return f"""
@@ -108,8 +113,9 @@ class Attribute:
 
 class Constraint:
     def __init__(self, input: dict, table_name: str) -> None:
-        self.attribute: str = f'{table_name}.{input.get("attribute", "")}'
-        self.operator: str = input.get("operator", "")
+        column = assert_identifier(input.get("attribute", ""), "attribute")
+        self.attribute: str = f"{table_name}.{column}"
+        self.operator: str = assert_operator(input.get("operator", ""))
         self.value: str = self.process_value(input.get("value", ""))
 
     # Handles if we are comparing strings
@@ -118,22 +124,23 @@ class Constraint:
         table_name, attribute_name = self.attribute.rsplit(".", 1)
         db_type = metadata.get_type(table_name, attribute_name)
         if db_type in ["STR", "DATE"]:
-            new_value = ""
+            # quote_literal escapes the value; the % wildcards are ours, added
+            # outside the escaped text so a value containing a quote cannot
+            # terminate the literal early.
             if self.operator in ["=", "!=", ">=", "<="]:
-                new_value = f"'{value}'"
+                new_value = quote_literal(value)
             else:
                 if self.operator == "SUBSTRING":
-                    new_value = f"'%{value}%'"
+                    new_value = quote_literal(f"%{value}%")
                 elif self.operator == "PREFIX":
-                    new_value = f"'{value}%'"
+                    new_value = quote_literal(f"{value}%")
                 elif self.operator == "SUFFIX":
-                    new_value = f"'%{value}'" 
+                    new_value = quote_literal(f"%{value}")
+                else:
+                    new_value = quote_literal(value)
                 self.operator = "LIKE"
         else:
-            if value.isnumeric():
-                new_value = value
-            else:
-                raise ValueError(f"Invalid value for constraint on {self.attribute}: {value}")
+            new_value = safe_numeric(value)
 
         return new_value
 

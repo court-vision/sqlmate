@@ -35,6 +35,21 @@ CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 
 # Schema introspection filters
 # Comma-separated list of schemas to include (e.g. "public,analytics")
+
+# Per-scope database credentials.
+#
+# The "user" scope is the connection that executes client-authored SQL
+# (routers/query.py). It should be a READ ONLY role with no access to usr.*.
+# The "sqlmate" scope owns saved user tables and needs write access to the
+# sqlmate schema. See ops/roles.sql.
+#
+# Both fall back to DB_USER/DB_PASS so an existing single-role deployment keeps
+# working, but a deployment that has run ops/roles.sql should set all four.
+DB_QUERY_USER = os.getenv("DB_QUERY_USER", "")
+DB_QUERY_PASS = os.getenv("DB_QUERY_PASS", "")
+DB_APP_USER = os.getenv("DB_APP_USER", "")
+DB_APP_PASS = os.getenv("DB_APP_PASS", "")
+
 SQLMATE_ALLOWED_SCHEMAS = [s.strip() for s in os.getenv("SQLMATE_ALLOWED_SCHEMAS", "").split(",") if s.strip()]
 # Comma-separated list of tables to exclude (e.g. "migrations,internal_logs")
 SQLMATE_BLOCKED_TABLES = [s.strip() for s in os.getenv("SQLMATE_BLOCKED_TABLES", "").split(",") if s.strip()]

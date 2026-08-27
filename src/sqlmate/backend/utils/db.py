@@ -8,7 +8,10 @@ from datetime import datetime
 import pytz
 
 from sqlmate.backend.classes.database import SQLAlchemyDB
-from sqlmate.backend.utils.constants import DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, DB_TYPE
+from sqlmate.backend.utils.constants import (
+    DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, DB_TYPE,
+    DB_QUERY_USER, DB_QUERY_PASS, DB_APP_USER, DB_APP_PASS,
+)
 
 
 def get_timestamp() -> str:
@@ -34,10 +37,18 @@ def _build_config(which: str = "user") -> dict:
       - Both connect to DB_NAME (same database)
       - "sqlmate" sets search_path=sqlmate,public so unqualified names resolve to the sqlmate schema
     """
+    # The "user" scope executes client-authored SQL, so it gets the read-only
+    # role when one is configured; "sqlmate" gets the role that may write to the
+    # sqlmate schema. Both fall back to the shared pair. See ops/roles.sql.
+    if which == "sqlmate":
+        scope_user, scope_pass = DB_APP_USER, DB_APP_PASS
+    else:
+        scope_user, scope_pass = DB_QUERY_USER, DB_QUERY_PASS
+
     config = {
         "DB_HOST": DB_HOST,
-        "DB_USER": DB_USER,
-        "DB_PASS": DB_PASS,
+        "DB_USER": scope_user or DB_USER,
+        "DB_PASS": scope_pass or DB_PASS,
         "DB_PORT": DB_PORT,
         "DB_TYPE": DB_TYPE,
     }

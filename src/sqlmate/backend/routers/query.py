@@ -9,12 +9,17 @@ from sqlmate.backend.classes.queries.base import BaseQuery
 
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, status, Response
+from fastapi import APIRouter, Depends, status, Response
+from sqlmate.backend.utils.clerk_auth import verify_clerk_token
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Dangerous SQL keywords that indicate write/DDL operations
+# Backstop only. This is a keyword scan over generated SQL: it does not list
+# COPY (which reaches TO PROGRAM on a superuser connection) and cannot see past
+# string concatenation. The controls that bound this endpoint are the Clerk
+# dependency below, the input validation in utils/guard.py, and above all the
+# least-privilege database role sqlmate connects as.
 _WRITE_PATTERN = re.compile(
 	r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE)\b",
 	re.IGNORECASE,
@@ -41,7 +46,11 @@ class QueryResponse(BaseModel):
 	status: StatusResponse
 	table: Table | None = None
 @router.post("", response_model=QueryResponse, status_code=status.HTTP_200_OK)
-def run_query(req: QueryRequest, response: Response) -> QueryResponse:
+def run_query(
+	req: QueryRequest,
+	response: Response,
+	current_user: dict = Depends(verify_clerk_token),
+) -> QueryResponse:
 	# Validate the input data
 	try:
 		if not req.query_params:
@@ -59,7 +68,14 @@ def run_query(req: QueryRequest, response: Response) -> QueryResponse:
 		)
 
 
-	query_body = generate_query(query, req.options or {})
+	try:
+		query_body = generate_query(query, req.options or {})
+	except ValueError as e:
+		response.status_code = status.HTTP_400_BAD_REQUEST
+		return QueryResponse(
+			status=StatusResponse(status="error", message=str(e)),
+			table=None
+		)
 
 	# Validate that the generated SQL is read-only
 	validation_error = _validate_read_only(query_body)
