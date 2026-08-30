@@ -25,8 +25,6 @@ app = FastAPI(lifespan=lifespan)
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:3001",
-    "https://sqlmate-ruddy.vercel.app",
-    "https://sqlmate.courtvision.dev",
     "https://sqlmate-backend.courtvision.dev",
     "https://courtvision.dev",
     "https://www.courtvision.dev",
@@ -48,7 +46,7 @@ app.add_middleware(
 async def add_csp_header(request: Request, call_next):
     response: Response = await call_next(request)
     response.headers["Content-Security-Policy"] = (
-        "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev https://sqlmate.courtvision.dev https://sqlmate-backend.courtvision.dev"
+        "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev https://sqlmate-backend.courtvision.dev"
     )
     return response
 
