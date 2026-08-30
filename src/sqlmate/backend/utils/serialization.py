@@ -26,7 +26,7 @@ def query_output_to_table(query_output: list[tuple], column_names: list[str], qu
 		[val for val in row] for row in query_output
 	]
 
-	# This is what the frontend expects to be able to deserialize into the table
+	# This is what the API client expects to be able to deserialize into the table
 	response: Table = Table(
 		query=query_body,
 		created_at=None,  # This can be set to None as we don't have this information in the query output yet

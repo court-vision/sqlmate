@@ -35,7 +35,7 @@ def initialize_database(credentials: dict) -> bool:
     init_ddl = get_init_ddl(db_type)
     db.execute(init_ddl, err_msg="❌ Error creating 'sqlmate' database/schema. Make sure you have the necessary permissions.")
 
-    # Generate JSON schema file for frontend use
+    # Generate JSON schema file served by GET /schema
     metadata = db.fetch_metadata()
     if metadata is None:
         print(f"❌ Failed to fetch metadata for database '{credentials['DB_NAME']}'.")
@@ -176,46 +176,9 @@ def write_schema_files(schema: List[Dict[str, Any]], db) -> bool:
 
         print(f"✅ Schema file generated at {schema_path}")
 
-        # Try to copy to frontend directory if it exists
-        if not copy_schema_to_frontend(schema_path):
-            raise Exception("Failed to copy schema to frontend")
-
         return True
     except Exception as e:
         print(f"❌ Error writing schema file: {e}")
         db.close()
         return False
 
-def copy_schema_to_frontend(schema_path: str) -> bool:
-    """
-    Copy the schema file to the frontend public directory if needed.
-
-    Args:
-        schema_path (str): Path to the schema file
-
-    Returns:
-        bool: True if successful or not needed, False otherwise
-    """
-    try:
-        # Check if we're running from the SQLMate project directory
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-        frontend_public = os.path.join(project_root, 'frontend', 'public')
-
-        # If frontend directory exists, copy the schema there too
-        if os.path.exists(frontend_public):
-            frontend_schema_path = os.path.join(frontend_public, 'db_schema.json')
-
-            # Copy the schema file
-            with open(schema_path, 'r') as src_file:
-                schema_data = json.load(src_file)
-
-            with open(frontend_schema_path, 'w') as dest_file:
-                json.dump(schema_data, dest_file, indent=2)
-
-            print(f"✅ Schema file also copied to {frontend_schema_path}")
-
-        return True
-    except Exception as e:
-        print(f"⚠️ Note: Could not copy schema to frontend directory: {e}")
-        return True  # Not a fatal error, just a warning

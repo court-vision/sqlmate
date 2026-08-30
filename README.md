@@ -2,7 +2,7 @@
 
 A no-code, visual SQL query builder that abstracts database querying into a drag-and-drop interface. Users build multi-table queries without writing SQL — SQLMate automatically resolves foreign key relationships, generates JOIN clauses via BFS graph traversal, and executes the query against a connected relational database.
 
-Originally developed as a university course project (CS411, UIUC — Team 006: 0.1xDevelopers). This fork is integrated into the Court Vision platform at `sqlmate.courtvision.dev`, connected to the Court Vision PostgreSQL database instead of the original music dataset.
+Originally developed as a university course project (CS411, UIUC — Team 006: 0.1xDevelopers). This fork is integrated into the Court Vision platform as a backend-only query service at `sqlmate-backend.courtvision.dev`, connected to the Court Vision PostgreSQL database instead of the original music dataset.
 
 ---
 
@@ -31,23 +31,15 @@ Originally developed as a university course project (CS411, UIUC — Team 006: 0
 | MySQL / PostgreSQL | Supported databases |
 
 ### Frontend
-| Technology | Purpose |
-|---|---|
-| Next.js 15 (App Router) | React framework |
-| React 19 + TypeScript 5 | UI |
-| Tailwind CSS 4 | Styling |
-| Radix UI | Accessible component primitives |
-| dnd-kit | Drag-and-drop |
-| react-resizable-panels | Resizable split-pane layout |
-| Clerk | Authentication (replaces JWT in fork) |
-| Vercel Analytics | Usage tracking |
-| Bun | Package manager and runtime |
+
+Removed. The Next.js client that used to live in `frontend/` is gone — see
+"Frontend removal" below. SQLMate is now a backend-only service; its API is
+consumed directly.
 
 ### Infrastructure
 | Technology | Purpose |
 |---|---|
 | Docker + docker-compose | Containerized local dev and deployment |
-| Vercel | Frontend hosting |
 | Railway.app | Backend hosting |
 
 ---
@@ -81,35 +73,9 @@ sqlmate/
 │           ├── env_setup.py  # Interactive credential prompting, secrets.env creation
 │           ├── db_setup.py   # DB init DDL, schema JSON generation, table selection
 │           └── sql/          # DDL templates for MySQL and PostgreSQL
-├── frontend/                 # Next.js application
-│   ├── src/
-│   │   ├── app/              # App Router pages
-│   │   │   ├── page.tsx      # Main query builder (DnD canvas, panels)
-│   │   │   ├── my-tables/    # Saved tables management page
-│   │   │   ├── edit-table/   # Table UPDATE interface
-│   │   │   ├── profile/      # User profile
-│   │   │   ├── sign-in/      # Clerk sign-in
-│   │   │   └── sign-up/      # Clerk sign-up
-│   │   ├── components/       # UI components
-│   │   │   ├── studioCanvas.tsx          # Drop zone, query controls, run button
-│   │   │   ├── tablePanel.tsx            # Sidebar: draggable table list
-│   │   │   ├── tableCustomizationPanel.tsx # Column selection, filters, aggregations
-│   │   │   ├── consolePanel.tsx          # Query results, SQL display, CSV export, save
-│   │   │   ├── queryResultTable.tsx      # Paginated results table
-│   │   │   ├── tableUpdatePanel.tsx      # UPDATE query interface
-│   │   │   └── header.tsx               # Nav header
-│   │   ├── services/
-│   │   │   ├── api/                     # Typed API client wrappers
-│   │   │   └── queryService.tsx         # Serializes UI state → QueryRequest
-│   │   ├── hooks/
-│   │   │   └── useEmbeddedAuth.ts       # Auth hook (Clerk token forwarding)
-│   │   └── types/
-│   │       └── http.tsx                 # Shared request/response types
-│   └── middleware.ts         # Clerk route protection
 ├── docker/
-│   ├── backend.Dockerfile    # Python 3.13-slim, installs package, runs uvicorn
-│   └── frontend.Dockerfile   # oven/bun:1-slim, bun install + build, runs on 3001
-├── docker-compose.yaml       # backend (8081) + frontend (3001) with shared schema volume
+│   └── backend.Dockerfile    # Python 3.13-slim, installs package, runs uvicorn
+├── docker-compose.yaml       # backend (8081) with a shared schema volume
 ├── pyproject.toml            # Python package config, CLI entry point
 ├── data/
 │   ├── raw/                  # Original CSV datasets (Spotify/music — original project)
@@ -144,7 +110,7 @@ Generated SQL uses CTEs for tables with constraints (improves query planner perf
 
 ### Schema introspection and filtering
 
-On backend startup, the schema is written to `db_schema.json` and served at `GET /schema`. The frontend reads this file to populate the table browser. You can restrict which tables are exposed using environment variables:
+On backend startup, the schema is written to `db_schema.json` and served at `GET /schema`, which API clients use to populate a table browser. You can restrict which tables are exposed using environment variables:
 
 - `SQLMATE_ALLOWED_SCHEMAS` — comma-separated list of schemas to include (e.g., `nba,stats_s2`)
 - `SQLMATE_BLOCKED_TABLES` — comma-separated list of tables to exclude
@@ -179,9 +145,7 @@ sqlmate run
 sqlmate cleanup
 ```
 
-After `sqlmate run`, the app is available at:
-- Frontend: http://localhost:3001
-- Backend API: http://localhost:8081
+After `sqlmate run`, the API is available at http://localhost:8081.
 
 ### Option 2: Docker Compose directly
 
@@ -201,13 +165,6 @@ cd src
 pip install -e ..
 # Set environment variables (see Configuration)
 uvicorn sqlmate.backend.main:app --reload --port 8081
-```
-
-**Frontend:**
-```bash
-cd frontend
-bun install
-bun run dev     # http://localhost:3000
 ```
 
 ---
@@ -231,8 +188,6 @@ All configuration is via environment variables. In local development, the backen
 | `SQLMATE_ALLOWED_SCHEMAS` | No | (all) | Comma-separated schemas to expose in the query builder |
 | `SQLMATE_BLOCKED_TABLES` | No | (none) | Comma-separated tables to hide from users |
 | `SQLMATE_SCHEMA_DIR` | No | `/app/schema` | Directory where `db_schema.json` is written |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (fork) | — | Clerk publishable key for frontend |
-| `BACKEND_URL` | No | `http://backend:8081` | Frontend → backend URL (used in Docker) |
 
 ---
 
@@ -242,7 +197,7 @@ All configuration is via environment variables. In local development, the backen
 |---|---|---|---|
 | `GET` | `/` | — | Health welcome message |
 | `GET` | `/health` | — | Health check |
-| `GET` | `/schema` | — | Returns `db_schema.json` (table/column list for frontend) |
+| `GET` | `/schema` | — | Returns `db_schema.json` (table/column list for clients) |
 | `GET` | `/auth/me` | Clerk JWT | Returns authenticated user info |
 | `POST` | `/query` | — | Executes a visual query; returns paginated result table |
 | `GET` | `/users/get_tables` | Clerk JWT | Lists user's saved tables |
@@ -282,9 +237,15 @@ The `POST /query` endpoint enforces read-only access — it rejects any generate
 
 This is a fork of the original SQLMate project (CS411 Team 006, UIUC). Key differences from the original:
 
-- **Authentication**: The original used a custom JWT + bcrypt auth system (`/auth/register`, `/auth/login`). This fork replaces it entirely with [Clerk](https://clerk.com) — the `verify_clerk_token` FastAPI dependency validates Clerk JWTs, and the frontend uses `@clerk/nextjs` middleware and hooks.
+- **Authentication**: The original used a custom JWT + bcrypt auth system (`/auth/register`, `/auth/login`). This fork replaces it entirely with [Clerk](https://clerk.com) — the `verify_clerk_token` FastAPI dependency validates Clerk JWTs.
 - **Database**: Connected to the Court Vision PostgreSQL database (NBA stats, player data) instead of the original Music database. `SQLMATE_ALLOWED_SCHEMAS=nba,stats_s2` restricts the query builder to relevant schemas.
 - **CORS**: Extended to include `courtvision.dev` subdomains with an `allow_origin_regex`.
-- **Deployment**: Hosted at `sqlmate.courtvision.dev` (frontend via Vercel) and `sqlmate-backend.courtvision.dev` (backend via Railway).
+- **Deployment**: Backend hosted at `sqlmate-backend.courtvision.dev` (Railway).
+- **Frontend removal**: the Next.js client under `frontend/` was deleted (see
+  `docs/PRODUCTION_READINESS.md` item 8). Its `next.config.js` rewrote `/query`,
+  `/schema`, `/users/*` and `/auth/*` straight through to `BACKEND_URL`, so
+  deploying it anywhere would have re-opened a path to the backend that bypassed
+  the credential boundary closed in item 3. Recover it from git history if a UI
+  is ever wanted again — but re-audit those rewrites first.
 - **Schema introspection**: Added `SQLMATE_ALLOWED_SCHEMAS` and `SQLMATE_BLOCKED_TABLES` env vars for fine-grained control over which tables are exposed.
 - **PostgreSQL multi-schema support**: `DB_SCHEMA=*` mode introspects all user schemas; schema-qualified table names (e.g., `nba.players`) are handled throughout the query builder.
