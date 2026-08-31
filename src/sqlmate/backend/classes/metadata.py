@@ -156,20 +156,34 @@ class Metadata:
 
 					fk_query = text("""
 						SELECT
-							kcu.column_name,
-							ccu.table_schema AS referenced_table_schema,
-							ccu.table_name AS referenced_table_name,
-							ccu.column_name AS referenced_column_name
-						FROM information_schema.table_constraints AS tc
-						JOIN information_schema.key_column_usage AS kcu
-							ON tc.constraint_name = kcu.constraint_name
-							AND tc.table_schema = kcu.table_schema
-						JOIN information_schema.constraint_column_usage AS ccu
-							ON ccu.constraint_name = tc.constraint_name
-							AND ccu.constraint_schema = tc.constraint_schema
-						WHERE tc.constraint_type = 'FOREIGN KEY'
-							AND tc.table_schema = :schema
-							AND tc.table_name = :table_name;
+							source_attr.attname AS column_name,
+							ref_ns.nspname AS referenced_table_schema,
+							ref_table.relname AS referenced_table_name,
+							ref_attr.attname AS referenced_column_name
+						FROM pg_catalog.pg_constraint AS con
+						JOIN pg_catalog.pg_class AS source_table
+							ON source_table.oid = con.conrelid
+						JOIN pg_catalog.pg_namespace AS source_ns
+							ON source_ns.oid = source_table.relnamespace
+						JOIN pg_catalog.pg_class AS ref_table
+							ON ref_table.oid = con.confrelid
+						JOIN pg_catalog.pg_namespace AS ref_ns
+							ON ref_ns.oid = ref_table.relnamespace
+						JOIN LATERAL unnest(con.conkey) WITH ORDINALITY
+							AS source_key(attnum, position) ON TRUE
+						JOIN LATERAL unnest(con.confkey) WITH ORDINALITY
+							AS ref_key(attnum, position)
+							ON ref_key.position = source_key.position
+						JOIN pg_catalog.pg_attribute AS source_attr
+							ON source_attr.attrelid = con.conrelid
+							AND source_attr.attnum = source_key.attnum
+						JOIN pg_catalog.pg_attribute AS ref_attr
+							ON ref_attr.attrelid = con.confrelid
+							AND ref_attr.attnum = ref_key.attnum
+						WHERE con.contype = 'f'
+							AND source_ns.nspname = :schema
+							AND source_table.relname = :table_name
+						ORDER BY con.oid, source_key.position;
 					""")
 					fk_result = session.execute(fk_query, {"schema": table_schema, "table_name": table_name})
 					fk_rows: Any = fk_result.fetchall()
