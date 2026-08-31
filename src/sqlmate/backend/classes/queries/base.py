@@ -13,11 +13,11 @@ class BaseQuery:
         self.table_name: str = assert_table(self.format_table_name(username, input.get("table", "")))
         if not input.get("attributes") and not input.get("updates"):
             raise ValueError(f"No attribues or updates selected for {self.table_name} table")
-        self.attributes: List[Attribute] = [Attribute(details, self.table_name) for details in input.get("attributes", [])]
-        self.constraints: List[Constraint] = [Constraint(details, self.table_name) for details in input.get("constraints", [])]
-        self.group_by: List[str] = [f"{self.table_name}.{attribute}" for attribute in input.get("group_by", [])]
-        self.aggregations: List[Aggregation] = [Aggregation(details, self.table_name) for details in input.get("aggregations", [])]
-        self.order_by: List[Ordering] = [Ordering(details, self.table_name) for details in input.get("order_by", [])]
+        self.attributes: List[Attribute] = [Attribute(details, self.table_name) for details in (input.get("attributes") or [])]
+        self.constraints: List[Constraint] = [Constraint(details, self.table_name) for details in (input.get("constraints") or [])]
+        self.group_by: List[str] = [f"{self.table_name}.{attribute}" for attribute in (input.get("group_by") or [])]
+        self.aggregations: List[Aggregation] = [Aggregation(details, self.table_name) for details in (input.get("aggregations") or [])]
+        self.order_by: List[Ordering] = [Ordering(details, self.table_name) for details in (input.get("order_by") or [])]
 
         self.alias_map: dict = {}
 

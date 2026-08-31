@@ -11,4 +11,4 @@ COPY src /app/src
 RUN pip install .
 
 EXPOSE $PORT
-CMD uvicorn sqlmate.backend.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn sqlmate.backend.main:app --host :: --port $PORT

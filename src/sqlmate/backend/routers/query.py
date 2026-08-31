@@ -9,17 +9,17 @@ from sqlmate.backend.classes.queries.base import BaseQuery
 
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Depends, status, Response
-from sqlmate.backend.utils.clerk_auth import verify_clerk_token
+from fastapi import APIRouter, status, Response
 from pydantic import BaseModel
 
 router = APIRouter()
 
 # Backstop only. This is a keyword scan over generated SQL: it does not list
 # COPY (which reaches TO PROGRAM on a superuser connection) and cannot see past
-# string concatenation. The controls that bound this endpoint are the Clerk
-# dependency below, the input validation in utils/guard.py, and above all the
-# least-privilege database role sqlmate connects as.
+# string concatenation. The controls that bound this endpoint are the input
+# validation in utils/guard.py, the public API proxy's rate limit, the
+# private-only Railway network boundary, and above all the least-privilege
+# database role SQLMate connects as.
 _WRITE_PATTERN = re.compile(
 	r"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|REPLACE|MERGE|GRANT|REVOKE)\b",
 	re.IGNORECASE,
@@ -49,7 +49,6 @@ class QueryResponse(BaseModel):
 def run_query(
 	req: QueryRequest,
 	response: Response,
-	current_user: dict = Depends(verify_clerk_token),
 ) -> QueryResponse:
 	# Validate the input data
 	try:

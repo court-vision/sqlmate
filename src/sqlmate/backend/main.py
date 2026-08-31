@@ -3,8 +3,7 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from sqlmate.backend.utils.constants import PORT, SQLMATE_SCHEMA_DIR
@@ -21,34 +20,6 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "https://sqlmate-backend.courtvision.dev",
-    "https://courtvision.dev",
-    "https://www.courtvision.dev",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    # Keep Court Vision subdomains working even if hostnames shift (e.g. sqlmate-backend, staging).
-    allow_origin_regex=r"^https://([a-z0-9-]+\.)?courtvision\.dev$",
-    allow_credentials=True,
-    # OPTIONS preflight should never be blocked by method allow-list drift.
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.middleware("http")
-async def add_csp_header(request: Request, call_next):
-    response: Response = await call_next(request)
-    response.headers["Content-Security-Policy"] = (
-        "frame-ancestors 'self' http://localhost:3000 http://localhost:3001 https://courtvision.dev https://www.courtvision.dev https://sqlmate-backend.courtvision.dev"
-    )
-    return response
 
 
 @app.get("/")
@@ -80,4 +51,4 @@ app.include_router(router=query.router, prefix="/query")
 
 if __name__ == "__main__":
     # We're installed as a package
-    uvicorn.run("sqlmate.backend.main:app", host="0.0.0.0", port=PORT)
+    uvicorn.run("sqlmate.backend.main:app", host="::", port=PORT)

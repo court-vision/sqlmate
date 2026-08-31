@@ -2,7 +2,7 @@
 
 A no-code, visual SQL query builder that abstracts database querying into a drag-and-drop interface. Users build multi-table queries without writing SQL — SQLMate automatically resolves foreign key relationships, generates JOIN clauses via BFS graph traversal, and executes the query against a connected relational database.
 
-Originally developed as a university course project (CS411, UIUC — Team 006: 0.1xDevelopers). This fork is integrated into the Court Vision platform as a backend-only query service at `sqlmate-backend.courtvision.dev`, connected to the Court Vision PostgreSQL database instead of the original music dataset.
+Originally developed as a university course project (CS411, UIUC — Team 006: 0.1xDevelopers). This fork is integrated into the Court Vision platform as a private backend-only query service, connected to the Court Vision PostgreSQL database instead of the original music dataset. Browser traffic reaches it only through the Court Vision API proxy.
 
 ---
 
@@ -239,8 +239,8 @@ This is a fork of the original SQLMate project (CS411 Team 006, UIUC). Key diffe
 
 - **Authentication**: The original used a custom JWT + bcrypt auth system (`/auth/register`, `/auth/login`). This fork replaces it entirely with [Clerk](https://clerk.com) — the `verify_clerk_token` FastAPI dependency validates Clerk JWTs.
 - **Database**: Connected to the Court Vision PostgreSQL database (NBA stats, player data) instead of the original Music database. `SQLMATE_ALLOWED_SCHEMAS=nba,stats_s2` restricts the query builder to relevant schemas.
-- **CORS**: Extended to include `courtvision.dev` subdomains with an `allow_origin_regex`.
-- **Deployment**: Backend hosted at `sqlmate-backend.courtvision.dev` (Railway).
+- **Browser boundary**: SQLMate exposes no browser CORS surface; the Court Vision API is the only browser-facing hop.
+- **Deployment**: Private Railway service with no public domain. Anonymous schema/query traffic is proxied through `/v1/sqlmate`; authenticated saved-table operations use `/v1/internal/sqlmate`.
 - **Frontend removal**: the Next.js client under `frontend/` was deleted (see
   `docs/PRODUCTION_READINESS.md` item 8). Its `next.config.js` rewrote `/query`,
   `/schema`, `/users/*` and `/auth/*` straight through to `BACKEND_URL`, so
